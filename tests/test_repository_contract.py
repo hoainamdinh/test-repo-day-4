@@ -102,9 +102,12 @@ class RepositoryContractTest(unittest.TestCase):
             "README.md",
             "DATA_GOVERNANCE.md",
             "GUIDE.md",
+            "lab-guide.html",
+            "assets/guide/guide.css",
+            "assets/guide/guide.js",
             "RUBRIC.md",
             "CVAT_TASK_SPEC.md",
-            "LAB_COACH_TEST_RUNBOOK.md",
+            "PILOT_TEST_RUNBOOK.md",
             "MODEL_DIAGNOSTIC_POC.md",
             "POC_CVAT_COCO_ROUNDTRIP.md",
             "REFERENCE_REVIEW_PROTOCOL.md",
@@ -213,17 +216,27 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertIn("Blur/mask đơn lẻ không tự động", governance)
         self.assertIn("không được đánh giá", governance)
 
-    def test_authority_and_model_order_are_explicit(self):
+    def test_pilot_contract_and_model_order_are_explicit(self):
         documents = "\n".join(
             (ROOT / name).read_text(encoding="utf-8")
-            for name in ("README.md", "GUIDE.md", "LAB_COACH_TEST_RUNBOOK.md")
+            for name in ("README.md", "GUIDE.md", "PILOT_TEST_RUNBOOK.md")
         )
-        self.assertIn("Lab Coach quyết định", documents)
+        self.assertIn("Chỉ freeze", documents)
         self.assertIn("240 phút", documents)
         self.assertIn("independent attempt", documents)
         self.assertIn("sau self-QC", documents)
         self.assertIn("pilot-v0.3", documents)
         self.assertIn("ultralytics==8.4.145", documents)
+
+    def test_html_guide_covers_the_active_pack(self):
+        guide = (ROOT / "lab-guide.html").read_text(encoding="utf-8")
+        self.assertIn('lang="vi"', guide)
+        self.assertIn('href="#main-content"', guide)
+        self.assertIn("COCO-17", guide)
+        self.assertIn("240 PHÚT", guide)
+        self.assertIn("PILOT_TEST_RUNBOOK.md", guide)
+        for image_name in PILOT_IMAGE_NAMES:
+            self.assertIn(image_name, guide)
 
 
 class CocoKeypointsValidatorTest(unittest.TestCase):

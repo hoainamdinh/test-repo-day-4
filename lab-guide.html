@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hướng dẫn Lab 4: gán nhãn COCO-17 pose trong CVAT, kiểm visibility, export COCO Keypoints và lập báo cáo chất lượng dữ liệu.">
+  <title>Lab 4 | Pose Keypoints trong CVAT</title>
+  <link rel="stylesheet" href="assets/guide/guide.css">
+  <script src="assets/guide/guide.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Đi tới nội dung chính</a>
+
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="Về đầu trang"><span>DAY 04</span><strong>POSE QC</strong></a>
+    <nav class="primary-nav" aria-label="Điều hướng chính">
+      <a href="#data-pack">Dữ liệu</a>
+      <a href="#workflow">Thao tác</a>
+      <a href="#quality">Kiểm lỗi</a>
+      <a href="#submit">Nộp bài</a>
+    </nav>
+    <button class="print-button" type="button" data-print>In hướng dẫn</button>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">CVAT SKELETON · 240 PHÚT</p>
+        <h1>Đặt điểm theo bằng chứng.</h1>
+        <p class="hero-lede">Gán COCO-17 trên người thật, xử lý che khuất có lý do, tự kiểm rồi export một bộ evidence có thể audit.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#preflight">Bắt đầu lab</a>
+          <a class="button button-secondary" href="http://localhost:8080/tasks/16/jobs/12">Mở CVAT local</a>
+        </div>
+      </div>
+      <aside class="evidence-board" aria-label="Bằng chứng lần chạy local">
+        <div class="board-title"><span>LOCAL RUN</span><strong>CVAT 2.74.1</strong></div>
+        <dl>
+          <div><dt>Task / Job</dt><dd>16 / 12</dd></div>
+          <div><dt>Ảnh</dt><dd>10</dd></div>
+          <div><dt>Skeleton</dt><dd>COCO-17</dd></div>
+          <div><dt>Export</dt><dd>Keypoints 1.0</dd></div>
+        </dl>
+        <div class="lane-meter" aria-label="Hai ảnh calibration và tám ảnh cabin"><b>2</b><span>Calibration</span><i></i><b>8</b><span>Cabin</span></div>
+      </aside>
+    </section>
+
+    <section class="preflight section-pad" id="preflight" aria-labelledby="preflight-title">
+      <div class="section-heading">
+        <h2 id="preflight-title">Đúng task rồi mới vẽ.</h2>
+        <p>Hoàn tất sáu kiểm tra. Nếu một mục sai, dừng trước khi tạo skeleton.</p>
+      </div>
+      <div class="preflight-layout">
+        <div class="check-panel">
+          <label><input type="checkbox" data-progress> CVAT local mở được và đã đăng nhập</label>
+          <label><input type="checkbox" data-progress> Task chứa đúng 10 frame, range 0 đến 9</label>
+          <label><input type="checkbox" data-progress> Label cha là <code>person</code></label>
+          <label><input type="checkbox" data-progress> Có đúng 17 sublabel theo thứ tự COCO</label>
+          <label><input type="checkbox" data-progress> Hai ảnh calibration đứng trước tám ảnh cabin</label>
+          <label><input type="checkbox" data-progress> Đã đọc privacy boundary trước khi annotate</label>
+          <div class="progress-meter" aria-live="polite">
+            <span>Tiến độ preflight</span><strong data-progress-label>0/6</strong>
+            <i><b data-progress-bar></b></i>
+          </div>
+        </div>
+        <aside class="stop-rule">
+          <span>STOP RULE</span>
+          <h3>Schema khác thì dừng.</h3>
+          <p>Không tự đổi tên, thứ tự, topology hoặc visibility rule. Ghi lại frame và khác biệt quan sát được trước khi tiếp tục.</p>
+          <a href="CVAT_TASK_SPEC.md">Mở task specification</a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="data-section section-pad" id="data-pack" aria-labelledby="data-title">
+      <div class="section-heading wide-heading">
+        <p class="section-code">EVIDENCE LADDER</p>
+        <h2 id="data-title">Học đủ 17 điểm, rồi xử lý ảnh khó.</h2>
+        <p>Calibration dạy anatomy và topology. Cabin kiểm tra khả năng quyết định khi bằng chứng bị giới hạn.</p>
+      </div>
+
+      <div class="calibration-grid">
+        <figure class="data-shot calibration-main">
+          <img src="data/images/d04-01-calibration-full-coco17-frontal.jpg" width="1120" height="2060" alt="Ảnh calibration toàn thân nhìn thẳng, đủ bằng chứng cho 17 keypoint COCO">
+          <figcaption><span>CALIBRATION 01</span><strong>Đủ mặt, tay, hông, gối và cổ chân</strong></figcaption>
+        </figure>
+        <figure class="data-shot">
+          <img src="data/images/d04-02-calibration-raised-arm-coco17.jpg" width="1000" height="2100" alt="Ảnh calibration toàn thân với một tay giơ cao để luyện topology và trái phải" loading="lazy">
+          <figcaption><span>CALIBRATION 02</span><strong>Tay giơ cao, tự che khuất và laterality</strong></figcaption>
+        </figure>
+        <aside class="calibration-rule">
+          <strong>Quy tắc lane 1</strong>
+          <p>Đặt đủ 17 node theo evidence nhìn thấy. Xác định trái và phải theo cơ thể người trong ảnh, không theo phía màn hình.</p>
+          <code>nose → eyes → ears → shoulders → ankles</code>
+        </aside>
+      </div>
+
+      <div class="cabin-intro">
+        <div><span>LANE 2</span><h3>Tám tình huống cabin</h3></div>
+        <p>Năm facial node luôn đặt Outside vì mask đã loại bỏ bằng chứng. Các node còn lại vẫn phải xét riêng từng ảnh.</p>
+      </div>
+      <div class="cabin-gallery">
+        <figure class="data-shot"><img src="data/images/d04-03-cabin-real-vehicle-baseline.jpg" width="1200" height="1000" alt="Ảnh cabin xe thật ở điều kiện cơ sở với khuôn mặt đã che" loading="lazy"><figcaption><span>03</span><strong>Baseline</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-04-cabin-real-vehicle-object-interaction.jpg" width="1100" height="1000" alt="Ảnh cabin xe thật có tương tác với vật thể và khuôn mặt đã che" loading="lazy"><figcaption><span>04</span><strong>Object interaction</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-05-cabin-real-vehicle-cool-cast.jpg" width="1300" height="1000" alt="Ảnh cabin xe thật có ám màu lạnh và góc cơ thể xiên" loading="lazy"><figcaption><span>05</span><strong>Cool cast</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-06-cabin-real-vehicle-forward-lean.jpg" width="1300" height="1000" alt="Ảnh cabin xe thật với tư thế nghiêng người về trước" loading="lazy"><figcaption><span>06</span><strong>Forward lean</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-07-cabin-real-vehicle-handheld-object.jpg" width="1150" height="1000" alt="Ảnh cabin xe thật có vật cầm tay và cổ tay chồng lấp" loading="lazy"><figcaption><span>07</span><strong>Handheld object</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-08-cabin-simulator-low-light.jpg" width="640" height="480" alt="Ảnh cabin mô phỏng trong điều kiện ánh sáng yếu" loading="lazy"><figcaption><span>08</span><strong>Low light</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-09-cabin-simulator-glare.jpg" width="640" height="480" alt="Ảnh cabin mô phỏng có ánh sáng chói bên hông" loading="lazy"><figcaption><span>09</span><strong>Glare</strong></figcaption></figure>
+        <figure class="data-shot"><img src="data/images/d04-10-cabin-simulator-obstruction.jpg" width="640" height="480" alt="Ảnh cabin mô phỏng có vật cản ống kính" loading="lazy"><figcaption><span>10</span><strong>Obstruction</strong></figcaption></figure>
+      </div>
+      <p class="source-note">Nguồn, license, biến đổi privacy và SHA-256 của từng ảnh nằm trong <a href="data/image-manifest.csv">image manifest</a> và <a href="DATA_GOVERNANCE.md">data governance</a>.</p>
+    </section>
+
+    <section class="schema-section section-pad" id="visibility" aria-labelledby="schema-title">
+      <div class="schema-copy">
+        <div class="section-heading">
+          <h2 id="schema-title">Mỗi node có một trạng thái.</h2>
+          <p>Visibility mô tả bằng chứng annotation, không mô tả hành vi hay trạng thái của người trong ảnh.</p>
+        </div>
+        <figure class="skeleton-card">
+          <svg class="skeleton-map" viewBox="0 0 520 660" role="img" aria-labelledby="skeleton-title skeleton-desc">
+            <title id="skeleton-title">Sơ đồ skeleton COCO-17</title>
+            <desc id="skeleton-desc">Mười bảy node được đánh số theo thứ tự COCO, nối từ khuôn mặt qua vai, tay, hông và chân.</desc>
+            <rect class="skeleton-field" x="1" y="1" width="518" height="658" rx="2" />
+            <g class="bones">
+              <path d="M210 95 235 80 260 90 285 80 310 95 M185 185 335 185 M185 185 145 280 115 370 M335 185 375 280 405 370 M185 185 215 350 305 350 335 185 M215 350 205 480 195 610 M305 350 315 480 325 610" />
+            </g>
+            <g class="joints" aria-hidden="true">
+              <g transform="translate(260 90)"><circle r="18"/><text>1</text></g>
+              <g transform="translate(235 80)"><circle r="18"/><text>2</text></g>
+              <g transform="translate(285 80)"><circle r="18"/><text>3</text></g>
+              <g transform="translate(210 95)"><circle r="18"/><text>4</text></g>
+              <g transform="translate(310 95)"><circle r="18"/><text>5</text></g>
+              <g transform="translate(185 185)"><circle r="18"/><text>6</text></g>
+              <g transform="translate(335 185)"><circle r="18"/><text>7</text></g>
+              <g transform="translate(145 280)"><circle r="18"/><text>8</text></g>
+              <g transform="translate(375 280)"><circle r="18"/><text>9</text></g>
+              <g transform="translate(115 370)"><circle r="18"/><text>10</text></g>
+              <g transform="translate(405 370)"><circle r="18"/><text>11</text></g>
+              <g transform="translate(215 350)"><circle r="18"/><text>12</text></g>
+              <g transform="translate(305 350)"><circle r="18"/><text>13</text></g>
+              <g transform="translate(205 480)"><circle r="18"/><text>14</text></g>
+              <g transform="translate(315 480)"><circle r="18"/><text>15</text></g>
+              <g transform="translate(195 610)"><circle r="18"/><text>16</text></g>
+              <g transform="translate(325 610)"><circle r="18"/><text>17</text></g>
+            </g>
+          </svg>
+          <figcaption>
+            <strong>Thứ tự COCO-17</strong>
+            <ol class="keypoint-order">
+              <li>nose</li><li>left_eye</li><li>right_eye</li><li>left_ear</li><li>right_ear</li>
+              <li>left_shoulder</li><li>right_shoulder</li><li>left_elbow</li><li>right_elbow</li>
+              <li>left_wrist</li><li>right_wrist</li><li>left_hip</li><li>right_hip</li>
+              <li>left_knee</li><li>right_knee</li><li>left_ankle</li><li>right_ankle</li>
+            </ol>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="visibility-board">
+        <article><b>v=2</b><h3>Visible</h3><p>Joint nhìn thấy đủ để đặt tọa độ trực tiếp.</p><code>đặt vào tâm giải phẫu</code></article>
+        <article><b>v=1</b><h3>Occluded</h3><p>Joint bị che nhưng vị trí vẫn suy ra hợp lý từ cấu trúc cơ thể.</p><code>đặt điểm + bật Occluded</code></article>
+        <article><b>v=0</b><h3>Outside</h3><p>Joint ngoài khung hoặc không còn đủ evidence để gán.</p><code>đặt Outside, không đoán tọa độ</code></article>
+        <aside><strong>Cabin boundary</strong><p><code>nose</code>, hai mắt và hai tai luôn là <code>v=0</code>. Không đặt điểm vào giữa privacy mask.</p></aside>
+      </div>
+    </section>
+
+    <section class="workflow-section section-pad" id="workflow" aria-labelledby="workflow-title">
+      <div class="section-heading wide-heading">
+        <h2 id="workflow-title">Sáu thao tác từ ảnh đến export.</h2>
+        <p>Làm independent attempt trước. Model, peer hoặc reference chỉ xuất hiện sau self-QC.</p>
+      </div>
+      <ol class="workflow-list">
+        <li><span>01</span><div><h3>Mở đúng job</h3><p>Xác nhận 10 frame, label <code>person</code> và 17 sublabel. Frame 0 đến 1 là calibration.</p><code>Tasks → task → job</code></div></li>
+        <li><span>02</span><div><h3>Tạo skeleton</h3><p>Chọn Skeleton rồi chọn <code>person</code>. Đặt node theo thứ tự hiển thị, không bỏ qua node khó.</p><code>Skeleton → person → 17 nodes</code></div></li>
+        <li><span>03</span><div><h3>Đặt visibility</h3><p>Quyết định riêng cho từng joint. Occluded chỉ dùng khi còn đủ cơ sở suy ra vị trí.</p><code>Visible ≠ Occluded ≠ Outside</code></div></li>
+        <li><span>04</span><div><h3>Chạy self-QC</h3><p>Kiểm topology, trái phải, anatomy, visibility và node bị thiếu theo ba lượt cố định.</p><code>scope → topology → geometry</code></div></li>
+        <li><span>05</span><div><h3>Export dữ liệu</h3><p>Save, reload một frame để kiểm persistence, rồi export đúng COCO Keypoints 1.0.</p><code>Save → Export → COCO Keypoints 1.0</code></div></li>
+        <li><span>06</span><div><h3>Audit và rework</h3><p>Chạy validator, đối chiếu visibility report, xử lý finding trong CVAT rồi export lại nếu annotation đổi.</p><code>validate → review → fix → validate</code></div></li>
+      </ol>
+    </section>
+
+    <section class="timeline-section section-pad" aria-labelledby="timeline-title">
+      <div class="timeline-heading">
+        <div class="section-heading"><h2 id="timeline-title">240 phút, một evidence contract.</h2></div>
+        <p>Support và stretch cùng dùng một schema, một core task và cùng bộ nộp.</p>
+      </div>
+      <ol class="timeline">
+        <li><time>00–55</time><strong>Hiểu rule</strong><span>Preflight, demo COCO-17 và error clinic</span></li>
+        <li><time>55–90</time><strong>Calibration</strong><span>Hai ảnh guided và nghỉ 10 phút</span></li>
+        <li><time>90–155</time><strong>Independent</strong><span>Đọc pack rồi annotate tám ảnh cabin</span></li>
+        <li><time>155–200</time><strong>Self-QC</strong><span>Ba lượt kiểm, export, audit và nghỉ</span></li>
+        <li><time>200–225</time><strong>Review</strong><span>Diagnostic tùy chọn và peer finding</span></li>
+        <li><time>225–240</time><strong>Close loop</strong><span>Rework, re-export và kiểm bộ nộp</span></li>
+      </ol>
+    </section>
+
+    <section class="quality-section section-pad" id="quality" aria-labelledby="quality-title">
+      <div class="section-heading">
+        <h2 id="quality-title">Kiểm ba lượt, không kiểm theo cảm giác.</h2>
+      </div>
+      <div class="quality-layout">
+        <div class="quality-checks">
+          <details open><summary><span>PASS 1</span><strong>Topology và đủ node</strong><i>+</i></summary><div>Đúng một skeleton cho mỗi người. Đủ 17 node. Không nối chéo tay, chân hoặc đổi thứ tự.</div></details>
+          <details><summary><span>PASS 2</span><strong>Trái phải và anatomy</strong><i>+</i></summary><div>Đọc trái phải theo cơ thể người. Shoulder, elbow, wrist, hip, knee và ankle nằm tại tâm khớp hợp lý.</div></details>
+          <details><summary><span>PASS 3</span><strong>Visibility và evidence</strong><i>+</i></summary><div>Đối chiếu từng node với ảnh. Không dùng Occluded khi joint ngoài khung. Không đặt facial node vào mask.</div></details>
+        </div>
+        <aside class="error-board">
+          <h3>Bốn lỗi phải bắt</h3>
+          <dl>
+            <div><dt>SWAP</dt><dd>Nhầm left và right theo phía màn hình.</dd></div>
+            <div><dt>FLOAT</dt><dd>Node trôi khỏi tâm khớp.</dd></div>
+            <div><dt>GUESS</dt><dd>Đặt tọa độ khi không còn evidence.</dd></div>
+            <div><dt>LEAK</dt><dd>Dùng model hoặc reference trước independent attempt.</dd></div>
+          </dl>
+        </aside>
+      </div>
+      <div class="finding-formula" aria-label="Cấu trúc finding"><b>IMAGE</b><i>+</i><b>KEYPOINT</b><i>+</i><b>RULE</b><i>+</i><b>FIX</b></div>
+      <div class="finding-example">
+        <div><span>Ảnh</span><strong>d04-07</strong></div>
+        <div><span>Keypoint</span><strong>right_wrist</strong></div>
+        <div><span>Evidence</span><strong>Vật cầm tay che một phần tâm khớp</strong></div>
+        <div><span>Action</span><strong>Kiểm lại v=1 và đặt theo cấu trúc cẳng tay</strong></div>
+      </div>
+    </section>
+
+    <section class="submit-section section-pad" id="submit" aria-labelledby="submit-title">
+      <div class="section-heading wide-heading">
+        <p class="section-code">SUBMISSION</p>
+        <h2 id="submit-title">Ba file, hai lớp kiểm chứng.</h2>
+        <p>Validator kiểm cấu trúc và consistency. Semantic review mới kiểm vị trí giải phẫu và chất lượng quyết định.</p>
+      </div>
+      <div class="submit-layout">
+        <div class="package-tree">
+          <span>submission/</span>
+          <pre><code>COCO_KEYPOINTS_EXPORT.zip
+VISIBILITY_REPORT.csv
+POSE_REVIEW.md</code></pre>
+          <p>Không thêm model weight, raw source, reference hoặc file tạm.</p>
+        </div>
+        <ol class="submit-steps">
+          <li><b>1</b><div><strong>Tạo visibility report</strong><code>python3 scripts/validate-submission.py --export COCO_KEYPOINTS_EXPORT.zip --write-report VISIBILITY_REPORT.csv</code></div></li>
+          <li><b>2</b><div><strong>Hoàn tất review</strong><span>Copy template thành <code>POSE_REVIEW.md</code>, đóng mọi TODO và finding.</span></div></li>
+          <li><b>3</b><div><strong>Kiểm bộ nộp</strong><code>python3 scripts/validate-submission.py --submission-dir submission</code></div></li>
+        </ol>
+      </div>
+      <div class="decision-row">
+        <article><span>STRUCTURAL</span><strong>Parser, schema, mapping, count</strong></article>
+        <article><span>SEMANTIC</span><strong>Anatomy, laterality, visibility, reasoning</strong></article>
+        <p>Structural PASS không tự động đồng nghĩa annotation đúng.</p>
+      </div>
+    </section>
+
+    <section class="recovery-section section-pad" aria-labelledby="recovery-title">
+      <div class="section-heading"><h2 id="recovery-title">Recovery nhanh.</h2><p>Giữ evidence hiện tại, xác định lỗi thuộc tool, input hay rule rồi mới sửa.</p></div>
+      <div class="recovery-list">
+        <details><summary>Không thấy đủ 17 sublabel</summary><p>Dừng task. Kiểm lại SVG schema và label <code>person</code>; không tự thêm node bằng tay.</p></details>
+        <details><summary>Save xong node biến mất</summary><p>Reload đúng frame, kiểm trạng thái Outside và Objects list. Ghi frame cùng node bị ảnh hưởng.</p></details>
+        <details><summary>Export không xuất hiện</summary><p>Mở Requests, chờ trạng thái Finished rồi tải lại. Không đổi format để né lỗi.</p></details>
+        <details><summary>Validator báo sai filename</summary><p>Kiểm task có đúng 10 ảnh và tên giữ nguyên. Sửa từ CVAT hoặc tạo task đúng contract, không sửa JSON thủ công.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div><strong>DAY 04 · POSE KEYPOINTS</strong><p>COCO-17, visibility reasoning và evidence-led rework.</p></div>
+    <nav aria-label="Tài liệu liên quan">
+      <a href="GUIDE.md">Guide chữ</a>
+      <a href="CVAT_TASK_SPEC.md">Task spec</a>
+      <a href="RUBRIC.md">Rubric</a>
+      <a href="PILOT_TEST_RUNBOOK.md">Pilot test</a>
+      <a href="DATA_GOVERNANCE.md">Data governance</a>
+    </nav>
+  </footer>
+</body>
+</html>

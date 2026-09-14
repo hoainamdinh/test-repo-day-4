@@ -52,7 +52,7 @@ Chạy notebook hoặc CLI. Structural PASS không thay self-QC.
 
 ## 6. Diagnostic/peer/rework
 
-Sau self-QC, Lab Coach có thể chạy YOLO diagnostic. So sánh theo từng điểm; bất đồng chỉ tạo câu hỏi, không biến model thành đáp án. Reviewer ghi ít nhất một finding, hoặc một no-defect row có ba pass cụ thể. Tác giả quyết định `fixed`, `not-a-defect` hoặc `needs-review`, sửa trên CVAT và export lại nếu annotation đổi.
+Sau self-QC mới được chạy YOLO diagnostic. So sánh theo từng điểm; bất đồng chỉ tạo câu hỏi, không biến model thành đáp án. Reviewer ghi ít nhất một finding, hoặc một no-defect row có ba pass cụ thể. Tác giả quyết định `fixed`, `not-a-defect` hoặc `needs-review`, sửa trên CVAT và export lại nếu annotation đổi.
 
 ## Recovery
 

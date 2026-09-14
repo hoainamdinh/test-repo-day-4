@@ -1,8 +1,10 @@
 # Day 4 pilot — Cabin pose keypoints
 
-> **Trạng thái:** sẵn sàng bàn giao cho Lab Coach kiểm thử. Local CVAT Docker v2.74.1 đã pass task/schema/order smoke trên task #16/job #12; semantic round-trip và timed dry-run vẫn là release gate trước khi freeze.
+> **Trạng thái:** sẵn sàng kiểm thử. Local CVAT Docker v2.74.1 đã pass task/schema/order smoke trên task #16/job #12; semantic round-trip và timed dry-run vẫn là release gate trước khi freeze.
 
-Đây là pilot của lab **240 phút** về COCO-17 pose annotation. Pilot không chờ starter repo của giảng viên. Active pack gồm 10 người khác nhau theo hai evidence lane; giảng viên chỉ triển khai starter repo sau khi Lab Coach chạy pilot, sửa lỗi và khóa contract `pilot-v0.3`.
+Đây là pilot của lab **240 phút** về COCO-17 pose annotation. Active pack gồm 10 người khác nhau theo hai evidence lane và được khóa bằng contract `pilot-v0.3` sau khi hoàn tất kiểm thử.
+
+Mở `lab-guide.html` để dùng hướng dẫn trực quan, responsive và có checklist preflight tương tác. `GUIDE.md` là bản chữ tương đương để tra cứu nhanh.
 
 ## Quyết định dữ liệu
 
@@ -13,7 +15,7 @@
 - Pack chỉ dùng trong lane lớp học/phi thương mại do giới hạn CC BY-NC của HADRIAN. “Đã mask” không đồng nghĩa “anonymous”. Năm điểm `nose/eyes/ears` được chấm tọa độ trên 2 ảnh calibration; trên 8 ảnh cabin chúng bắt buộc `Outside` (`v=0`) và không được chấm vị trí.
 - Source behaviour label chỉ nằm trong provenance để truy vết, không phải ground truth của lab; học viên không được kết luận distracted/drowsy từ một still frame.
 - DriPE, DMD và Drive&Act chỉ là benchmark nghiên cứu khi điều khoản không cho phép bundle working copy.
-- Reference annotation do Lab Coach giữ ngoài repo; không có answer key ẩn hoặc nhãn giả trong pilot.
+- Reference annotation được giữ ngoài repo; không có answer key ẩn hoặc nhãn giả trong pilot.
 
 Xem `DATA_GOVERNANCE.md` trước khi thay bất kỳ ảnh nào.
 
@@ -70,7 +72,7 @@ python3 scripts/validate-submission.py --submission-dir submission
 
 Notebook `notebooks/day4-pose-quality.ipynb` cung cấp cùng quy trình cho Colab và không yêu cầu người học viết code.
 
-POC cũ trên task #14/job #10 chỉ chứng minh round-trip schema/export của hai ảnh đã retire. Pack v0.3 đã pass task/schema/order smoke trên task #16/job #12; Lab Coach vẫn phải hoàn tất annotation/save-reload/export semantic round-trip. Annotation POC không phải reference.
+POC cũ trên task #14/job #10 chỉ chứng minh round-trip schema/export của hai ảnh đã retire. Pack v0.3 đã pass task/schema/order smoke trên task #16/job #12; annotation/save-reload/export semantic round-trip vẫn phải hoàn tất. Annotation POC không phải reference.
 
 ## Bộ nộp
 
@@ -86,7 +88,7 @@ Validator chỉ chứng minh cấu trúc, schema, image mapping và consistency 
 
 ## Model diagnostic
 
-`yolo11n-pose.pt` được giữ làm diagnostic tùy chọn sau self-QC vì không đổi learning objective. Dependency được pin `ultralytics==8.4.145`; weight không nằm trong repo. Lab Coach phải xem `THIRD_PARTY_NOTICES.md` và chủ động xác nhận license boundary khi chạy script.
+`yolo11n-pose.pt` được giữ làm diagnostic tùy chọn sau self-QC vì không đổi learning objective. Dependency được pin `ultralytics==8.4.145`; weight không nằm trong repo. Phải đọc `THIRD_PARTY_NOTICES.md` và xác nhận license boundary trước khi chạy script.
 
 ```bash
 python3 scripts/run-yolo11-diagnostic.py --acknowledge-license-review
@@ -94,6 +96,6 @@ python3 scripts/run-yolo11-diagnostic.py --acknowledge-license-review
 
 Model output không phải ground truth, không tự động ghi đè annotation và không thuộc rubric core.
 
-## Release authority
+## Release gate
 
-Lab Coach quyết định data pack, schema, evidence, rubric, privacy boundary và thời lượng 240 phút. Sau CVAT Docker smoke test + timed dry-run + freeze `pilot-v0.3`, giảng viên mở PR starter repo đúng contract; mọi thay đổi learning objective/schema/order/evidence cần Lab Coach duyệt.
+Chỉ freeze `pilot-v0.3` sau khi CVAT Docker semantic round-trip và timed dry-run đều pass. Mọi thay đổi learning objective, schema, order, evidence, privacy boundary hoặc thời lượng 240 phút phải quay lại vòng pilot và kiểm thử tương ứng.

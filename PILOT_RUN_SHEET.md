@@ -3,7 +3,7 @@
 ## Run metadata
 
 - Date/time: 2026-09-14 (local technical POC)
-- Lab Coach: pending human run
+- Pilot operator: pending human run
 - CVAT URL/version/build: local Docker `http://localhost:8080`, CVAT v2.74.1
 - Browser/OS: Codex in-app browser / macOS
 - Image manifest SHA-256: `5c729b2ef55fc52a72cb2ba4853a942e1e32958dd4e03436dffaedfb584becd0`
@@ -44,10 +44,9 @@ Full evidence and the defect/fix trace are in `POC_CVAT_COCO_ROUNDTRIP.md`. The 
 
 ## Release decision
 
-- Lab Coach test handoff: `ready`
+- Pilot test handoff: `ready`
 - Freeze/student release: `hold`
 - Blocking findings: v0.3 semantic save/reload/export round-trip; novice and experienced 240-minute dry-runs
 - Changes made and retested:
 - Private reference location confirmed:
-- Instructor handoff PR/link:
-- Lab Coach sign-off:
+- Release sign-off:

@@ -16,7 +16,7 @@ Blur/mask đơn lẻ không tự động làm dữ liệu vô danh. On the two g
 
 ## Release controls
 
-Before each cohort, the Lab Coach must:
+Before each cohort:
 
 1. run `python3 scripts/audit-data-pack.py`;
 2. visually review every output for faces, plates, readable displays/documents and unintended identifiers;

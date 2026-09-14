@@ -1,4 +1,4 @@
-# Lab Coach test runbook — Day 4 pilot
+# Pilot test runbook - Day 4
 
 ## T-01 — Repository contract
 
@@ -49,9 +49,9 @@ Chạy nguyên pack 2 guided + 8 independent:
 
 Fail nếu novice không hoàn thành core trước phút 240. Ưu tiên giảm mật độ/mơ hồ của pack hoặc cải thiện đúng support step; không hạ evidence contract.
 
-## T-07 — Freeze và instructor handoff
+## T-07 - Freeze
 
-Chỉ sau T-01 đến T-06 pass, Lab Coach gắn `pilot-v0.3` và bàn giao:
+Chỉ sau T-01 đến T-06 pass mới gắn `pilot-v0.3` và khóa:
 
 - immutable image manifest/hashes;
 - schema JSON/SVG;
@@ -59,4 +59,4 @@ Chỉ sau T-01 đến T-06 pass, Lab Coach gắn `pilot-v0.3` và bàn giao:
 - learner flow, rubric và three-file submission contract;
 - attribution/license notice, privacy transformations và danh sách private assets **không** được đưa vào repo.
 
-Giảng viên mở PR starter repo. Lab Coach review PR và xác nhận không đổi learning objective, schema, order, evidence, privacy boundary hoặc 240 phút.
+Mọi thay đổi learning objective, schema, order, evidence, privacy boundary hoặc 240 phút đều phải quay lại vòng pilot và kiểm thử tương ứng.
