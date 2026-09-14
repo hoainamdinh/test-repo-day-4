@@ -4,7 +4,7 @@
 
 Đây là pilot của lab **240 phút** về COCO-17 pose annotation. Active pack gồm 10 người khác nhau theo hai evidence lane và được khóa bằng contract `pilot-v0.3` sau khi hoàn tất kiểm thử.
 
-Mở `lab-guide.html` để dùng hướng dẫn trực quan, responsive và có checklist preflight tương tác. `GUIDE.md` là bản chữ tương đương để tra cứu nhanh.
+Mở `lab-guide.html` để dùng hướng dẫn trực quan, responsive, checklist preflight tương tác và tutorial CVAT có ảnh chụp thật. `GUIDE.md` là bản chữ tương đương để tra cứu nhanh.
 
 ## Quyết định dữ liệu
 

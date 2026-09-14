@@ -235,8 +235,17 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertIn("COCO-17", guide)
         self.assertIn("240 PHÚT", guide)
         self.assertIn("PILOT_TEST_RUNBOOK.md", guide)
+        self.assertIn("Làm theo ảnh, rồi kiểm ngay trên task.", guide)
+        self.assertIn("COCO Keypoints 1.0", guide)
         for image_name in PILOT_IMAGE_NAMES:
             self.assertIn(image_name, guide)
+        for screenshot_name in (
+            "01-job-overview.png",
+            "02-select-skeleton.png",
+            "03-export-menu.png",
+        ):
+            self.assertIn(screenshot_name, guide)
+            self.assertTrue((ROOT / "assets" / "guide" / "cvat" / screenshot_name).is_file())
 
 
 class CocoKeypointsValidatorTest(unittest.TestCase):

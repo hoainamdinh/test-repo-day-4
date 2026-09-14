@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Hướng dẫn Lab 4: gán nhãn COCO-17 pose trong CVAT, kiểm visibility, export COCO Keypoints và lập báo cáo chất lượng dữ liệu.">
+  <link rel="icon" href="data:,">
   <title>Lab 4 | Pose Keypoints trong CVAT</title>
   <link rel="stylesheet" href="assets/guide/guide.css">
   <script src="assets/guide/guide.js" defer></script>
@@ -15,6 +16,7 @@
     <a class="wordmark" href="#top" aria-label="Về đầu trang"><span>DAY 04</span><strong>POSE QC</strong></a>
     <nav class="primary-nav" aria-label="Điều hướng chính">
       <a href="#data-pack">Dữ liệu</a>
+      <a href="#cvat-tutorial">CVAT</a>
       <a href="#workflow">Thao tác</a>
       <a href="#quality">Kiểm lỗi</a>
       <a href="#submit">Nộp bài</a>
@@ -162,6 +164,46 @@
         <article><b>v=1</b><h3>Occluded</h3><p>Joint bị che nhưng vị trí vẫn suy ra hợp lý từ cấu trúc cơ thể.</p><code>đặt điểm + bật Occluded</code></article>
         <article><b>v=0</b><h3>Outside</h3><p>Joint ngoài khung hoặc không còn đủ evidence để gán.</p><code>đặt Outside, không đoán tọa độ</code></article>
         <aside><strong>Cabin boundary</strong><p><code>nose</code>, hai mắt và hai tai luôn là <code>v=0</code>. Không đặt điểm vào giữa privacy mask.</p></aside>
+      </div>
+    </section>
+
+    <section class="cvat-tutorial section-pad" id="cvat-tutorial" aria-labelledby="cvat-tutorial-title">
+      <div class="section-heading wide-heading">
+        <h2 id="cvat-tutorial-title">Làm theo ảnh, rồi kiểm ngay trên task.</h2>
+        <p>Ba ảnh dưới đây được chụp từ CVAT Docker local, task 16/job 12. Giao diện có thể dịch chuyển nhẹ theo kích thước màn hình; tên thao tác và checkpoint mới là thứ cần giữ đúng.</p>
+      </div>
+      <aside class="tutorial-boundary"><strong>Không chép đáp án</strong><p>Ảnh hướng dẫn chỉ chỉ vị trí thao tác. Tự quyết định tọa độ và visibility trước khi xem diagnostic, review hoặc reference.</p></aside>
+
+      <div class="cvat-shot-grid">
+        <figure class="cvat-shot cvat-shot-wide">
+          <a href="assets/guide/cvat/01-job-overview.png" target="_blank" rel="noopener"><img src="assets/guide/cvat/01-job-overview.png" width="1440" height="900" alt="CVAT Docker local tại task 16 job 12, tab Labels đang hiển thị label person và ảnh cabin đã mask"></a>
+          <span class="ui-callout callout-frame" aria-hidden="true">1</span><span class="ui-callout callout-label" aria-hidden="true">2</span><span class="ui-callout callout-save" aria-hidden="true">3</span>
+          <figcaption><span>ẢNH THẬT 01</span><strong>① frame/file · ② label <code>person</code> · ③ Save</strong></figcaption>
+        </figure>
+        <ol class="cvat-click-steps">
+          <li><b>01</b><div><h3>Kiểm task trước</h3><p>Nhìn tên file ở thanh trên. Frame 0–1 là calibration; frame 2–9 là cabin. Mở tab <strong>Labels</strong> và xác nhận chỉ có label cha <code>person</code>.</p><code>Task 16 → Job 12 → Labels</code></div></li>
+          <li><b>02</b><div><h3>Chọn Skeleton</h3><p>Bấm biểu tượng Skeleton ở thanh trái. Trong bảng hiện ra, giữ <code>person</code> và chọn <strong>Shape</strong>; không chọn Track.</p><code>Skeleton → person → Shape</code></div></li>
+          <li><b>03</b><div><h3>Đặt đủ 17 node</h3><p>Đi theo thứ tự COCO hiển thị trong tool: face, shoulder, elbow, wrist, hip, knee, ankle. Không bỏ node khó để quay lại sau.</p><code>1 nose → 17 right_ankle</code></div></li>
+          <li><b>04</b><div><h3>Gán visibility từng điểm</h3><p><strong>Visible</strong> khi thấy tâm khớp; <strong>Occluded</strong> khi có cơ sở suy ra vị trí; <strong>Outside</strong> khi ngoài khung hoặc mất evidence. Cabin: năm facial node luôn Outside.</p><code>v=2 / v=1 / v=0</code></div></li>
+          <li><b>05</b><div><h3>Lưu rồi kiểm persistence</h3><p>Bấm <strong>Save</strong>, chuyển sang frame khác và quay lại. Nếu node biến mất, dừng và ghi lại frame/node; không vẽ lại theo trí nhớ.</p><code>Save → next frame → return</code></div></li>
+        </ol>
+      </div>
+
+      <div class="cvat-proof-grid">
+        <figure class="cvat-shot">
+          <a href="assets/guide/cvat/02-select-skeleton.png" target="_blank" rel="noopener"><img src="assets/guide/cvat/02-select-skeleton.png" width="1440" height="900" alt="CVAT thật đang mở hộp Draw new skeleton, label person và hai lựa chọn Shape cùng Track"></a>
+          <span class="ui-callout callout-skeleton" aria-hidden="true">1</span><span class="ui-callout callout-shape" aria-hidden="true">2</span>
+          <figcaption><span>ẢNH THẬT 02</span><strong>① chọn Skeleton · ② chọn <code>Shape</code>, không Track</strong></figcaption>
+        </figure>
+        <figure class="cvat-shot">
+          <a href="assets/guide/cvat/03-export-menu.png" target="_blank" rel="noopener"><img src="assets/guide/cvat/03-export-menu.png" width="1440" height="900" alt="CVAT thật với menu đang mở và mục Export job dataset"></a>
+          <span class="ui-callout callout-menu" aria-hidden="true">1</span><span class="ui-callout callout-export" aria-hidden="true">2</span>
+          <figcaption><span>ẢNH THẬT 03</span><strong>① Menu · ② Export job dataset</strong></figcaption>
+        </figure>
+      </div>
+
+      <div class="export-instruction">
+        <b>06</b><div><h3>Xuất đúng một format</h3><p>Sau self-QC, mở <strong>Menu → Export job dataset</strong>, chọn <strong>COCO Keypoints 1.0</strong>, giữ <strong>Save images</strong> tắt và tạo ZIP. Chờ Request hoàn tất trước khi tải; không sửa JSON trong ZIP.</p><code>COCO Keypoints 1.0 → OK → Requests → Finished → Download</code></div>
       </div>
     </section>
 
