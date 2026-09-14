@@ -1,0 +1,117 @@
+{
+  "pack_id": "dms-pose-evidence-ladder-v0.3",
+  "selection_date": "2026-09-14",
+  "selection_rule": "Exactly 10 distinct participant codes: two consented full-body calibration crops with scorable COCO-17 facial landmarks, then five real-vehicle and three simulator cabin frames with privacy-reduced faces.",
+  "privacy_contract": {
+    "claim": "purpose-limited classroom pack; no image is claimed anonymous",
+    "calibration_lane": "Two HSRD-100 scan-render crops retain facial evidence because the dataset card records informed consent, removal of direct identifiers, and CC BY 4.0 redistribution rights.",
+    "cabin_lane": "All Mendeley and HADRIAN cabin faces are masked; five facial keypoints are mandatory v=0 and excluded from coordinate scoring.",
+    "source_labels_used_as_ground_truth": false,
+    "local_processing": "Crop to one target person/driver, apply opaque face masks when required, reconstruct JPEG from pixels, and write no EXIF/ICC/XMP/comment metadata."
+  },
+  "sources": {
+    "hsrd-100": {
+      "dataset": "HSRD-100: 100 High-Quality 3D Human Scans Dataset",
+      "version": "2025 dataset revision",
+      "revision": "fe753f2eb34ec0194511eecebbcbffa2fddb67e1",
+      "url": "https://huggingface.co/datasets/digitalrealitylab/HSRD-100",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "rights_note": "The dataset card states informed consent, removal of direct identifiers, CC BY 4.0 redistribution rights and pose estimation as an intended use. Derivatives remain potentially recognizable and are not called anonymous."
+    },
+    "mendeley-risk-behavior": {
+      "dataset": "Driver Risk Behavior Dataset for Embedded Vision Applications",
+      "version": "1",
+      "doi": "10.17632/562zj8n7xf.1",
+      "url": "https://data.mendeley.com/datasets/562zj8n7xf/1",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "archive_url": "https://data.mendeley.com/public-files/datasets/562zj8n7xf/files/35739bb9-8b9c-4c99-b2c6-4a0f49fb717d/file_downloaded",
+      "archive_sha256": "87c1713ee9b036db542ebeb7cd5cf7618cc5b41e4e9286ec2741efd7985539bf",
+      "rights_note": "The page publishes CC BY 4.0. Its anonymisation claim did not match visual inspection, so every selected face is masked and the pack makes no anonymity claim."
+    },
+    "hadrian": {
+      "dataset": "RGB and Depth videos directory",
+      "version": "1",
+      "doi": "10.25452/figshare.plus.22277668.v1",
+      "url": "https://plus.figshare.com/articles/dataset/RGB_and_Depth_videos_directory/22277668",
+      "license": "CC BY-NC 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+      "rights_note": "Figshare states that participant faces were masked and non-consenting IDs 66 and 78 were excluded. Classroom distribution is noncommercial only."
+    }
+  },
+  "images": [
+    {
+      "image_id": "D04-C01", "output_filename": "d04-01-calibration-full-coco17-frontal.jpg", "role": "guided", "evidence_lane": "calibration-full-coco17",
+      "source_key": "hsrd-100", "participant_code": "HSRD-0023", "setup_id": "hsrd-scan-0023",
+      "source_filename": "HSR0023-Body-017-Cover.jpg", "source_url": "https://huggingface.co/datasets/digitalrealitylab/HSRD-100/resolve/fe753f2eb34ec0194511eecebbcbffa2fddb67e1/preview/HSR0023-Body-017-Cover.jpg?download=true",
+      "source_frame_sha256": "9e27ddb4840b16a3aa173f753c34571351316e71d3ab7c59f64e21daae47a7f1", "source_behavior_hint": "consented scan-render calibration; no identity or behaviour ground truth",
+      "crop_box": [780, 80, 1900, 2140], "transform": "baseline", "teaching_stressor": "clear frontal full body; all 17 COCO landmarks have coordinate evidence",
+      "facial_keypoints_scored": true, "face_evidence": "visible-scorable", "full_body_evidence": "visible-scorable"
+    },
+    {
+      "image_id": "D04-C02", "output_filename": "d04-02-calibration-raised-arm-coco17.jpg", "role": "guided", "evidence_lane": "calibration-full-coco17",
+      "source_key": "hsrd-100", "participant_code": "HSRD-0015", "setup_id": "hsrd-scan-0015",
+      "source_filename": "HSR0015-Body-070-Cover.jpg", "source_url": "https://huggingface.co/datasets/digitalrealitylab/HSRD-100/resolve/fe753f2eb34ec0194511eecebbcbffa2fddb67e1/preview/HSR0015-Body-070-Cover.jpg?download=true",
+      "source_frame_sha256": "c5c8acdc6d031f36e47cf3ddc0399bdd32819f93fbe1013c67a05f98a3bee756", "source_behavior_hint": "consented scan-render calibration; no identity or behaviour ground truth",
+      "crop_box": [950, 40, 1950, 2140], "transform": "baseline", "teaching_stressor": "full-body raised-arm pose for topology, laterality and self-occlusion calibration",
+      "facial_keypoints_scored": true, "face_evidence": "visible-scorable", "full_body_evidence": "visible-scorable"
+    },
+    {
+      "image_id": "D04-M03", "output_filename": "d04-03-cabin-real-vehicle-baseline.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "mendeley-risk-behavior", "participant_code": "MRB-ce8291e3", "setup_id": "mrb-recording-ce8291e3",
+      "source_member": "Images_Labels/ce8291e3-2691-44cd-ac9f-e0558d819eba_10.jpg", "source_frame_sha256": "090ffbab7a89efa94ff74ad151b381d514c9c583f9820ca96f84e3ed851ffb44", "source_behavior_hint": "source-class-0-neutral; provenance-only",
+      "crop_box": [300, 80, 1500, 1080], "face_boxes": [[220, 60, 560, 350]], "transform": "baseline", "teaching_stressor": "real-vehicle nominal upper-body pose; facial nodes intentionally unavailable",
+      "facial_keypoints_scored": false, "face_evidence": "privacy-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-M04", "output_filename": "d04-04-cabin-real-vehicle-object-interaction.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "mendeley-risk-behavior", "participant_code": "MRB-d37c44c3", "setup_id": "mrb-recording-d37c44c3",
+      "source_member": "Images_Labels/d37c44c3-53f6-4f22-b4db-0ceb0c55d1a8_12.jpg", "source_frame_sha256": "ddf8ac1cba2ca4a8a8cdb4045fcd7d1cf723093416ef7c91bb4b0e834de19e54", "source_behavior_hint": "source-classes-3-and-2; provenance-only",
+      "crop_box": [450, 80, 1550, 1080], "face_boxes": [[300, 100, 620, 380]], "transform": "baseline", "teaching_stressor": "object interaction and relaxed arm pose; do not infer driver state",
+      "facial_keypoints_scored": false, "face_evidence": "privacy-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-M05", "output_filename": "d04-05-cabin-real-vehicle-cool-cast.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "mendeley-risk-behavior", "participant_code": "MRB-d9d40c4d", "setup_id": "mrb-recording-d9d40c4d",
+      "source_member": "Images_Labels/d9d40c4d-9689-4683-a284-7fc28afa342a_15.jpg", "source_frame_sha256": "0cb72092daafa63ef9a823edc9e53180d09326decdd5f54daeca4e85ccd32279", "source_behavior_hint": "source-class-2-distraction; provenance-only",
+      "crop_box": [250, 80, 1550, 1080], "face_boxes": [[150, 160, 520, 480]], "transform": "baseline", "teaching_stressor": "natural cool colour cast and oblique body geometry",
+      "facial_keypoints_scored": false, "face_evidence": "privacy-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-M06", "output_filename": "d04-06-cabin-real-vehicle-forward-lean.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "mendeley-risk-behavior", "participant_code": "MRB-f78505a2", "setup_id": "mrb-recording-f78505a2",
+      "source_member": "Images_Labels/f78505a2-5c98-4a51-a449-b632ff620b0a_107.jpg", "source_frame_sha256": "3079af7c24e07309cc9817d3df1f1f238485b9f13a60a0350977399ffc579511", "source_behavior_hint": "source-class-1-microsleep; provenance-only",
+      "crop_box": [250, 80, 1550, 1080], "face_boxes": [[150, 100, 530, 460]], "transform": "baseline", "teaching_stressor": "forward lean, head-arm proximity and self-occlusion; no drowsiness claim",
+      "facial_keypoints_scored": false, "face_evidence": "privacy-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-M07", "output_filename": "d04-07-cabin-real-vehicle-handheld-object.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "mendeley-risk-behavior", "participant_code": "MRB-fcb311b4", "setup_id": "mrb-recording-fcb311b4",
+      "source_member": "Images_Labels/fcb311b4-a8ec-4cfa-98f0-5b89d7426ba9_26.jpg", "source_frame_sha256": "19b36fa67008664b7ebdc369db47ad8151ecc0c22b9d93cdd3929ba121ccc261", "source_behavior_hint": "source-class-3-cellphone-use; provenance-only",
+      "crop_box": [400, 80, 1550, 1080], "face_boxes": [[140, 150, 520, 470]], "transform": "baseline", "teaching_stressor": "handheld object, wrist overlap and torso rotation; no behaviour label",
+      "facial_keypoints_scored": false, "face_evidence": "privacy-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-H08", "output_filename": "d04-08-cabin-simulator-low-light.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "hadrian", "participant_code": "HAD-53", "setup_id": "hadrian-simulator-camera",
+      "source_filename": "ID_53_ColorCameraVideoMask.mp4", "source_file_id": "39620053", "source_url": "https://ndownloader.figshare.com/files/39620053", "source_file_size": 3260737078, "source_file_md5": "365a20746e595be661faf1e534d1a5ca", "timestamp_seconds": 6000,
+      "source_frame_sha256": "2a79d720bb829c688fcdedd4a1a3398fb045322a9cf6b9f4edbd78de98ca1dc3", "source_behavior_hint": "continuous simulator recording; no state label imported", "transform": "low-light", "teaching_stressor": "deterministic low illumination and one-hand gesture",
+      "facial_keypoints_scored": false, "face_evidence": "source-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-H09", "output_filename": "d04-09-cabin-simulator-glare.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "hadrian", "participant_code": "HAD-62", "setup_id": "hadrian-simulator-camera",
+      "source_filename": "ID_62_ColorCameraVideoMask.mp4", "source_file_id": "39619939", "source_url": "https://ndownloader.figshare.com/files/39619939", "source_file_size": 2464498494, "source_file_md5": "611ad787e805a8a646d68af1c80cb0ff", "timestamp_seconds": 6000,
+      "source_frame_sha256": "4f40505da3012d66aa53df8a8303b7b3b5b83ff4007de4a00382b4b0b28c2aed", "source_behavior_hint": "continuous simulator recording; no state label imported", "transform": "glare", "teaching_stressor": "deterministic lateral glare and open-hand pose",
+      "facial_keypoints_scored": false, "face_evidence": "source-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    },
+    {
+      "image_id": "D04-H10", "output_filename": "d04-10-cabin-simulator-obstruction.jpg", "role": "independent", "evidence_lane": "cabin-visibility-quality",
+      "source_key": "hadrian", "participant_code": "HAD-83", "setup_id": "hadrian-simulator-camera",
+      "source_filename": "ID_83_ColorCameraVideoMask.mp4", "source_file_id": "39620284", "source_url": "https://ndownloader.figshare.com/files/39620284", "source_file_size": 1833744105, "source_file_md5": "24689b382b9df21246930252d30e7bd4", "timestamp_seconds": 6000,
+      "source_frame_sha256": "5e540cfe97bdbae551435d8cac237f270bb70a521b4857bc881a4e23aff32558", "source_behavior_hint": "continuous simulator recording; no state label imported", "transform": "partial-obstruction", "teaching_stressor": "deterministic lens obstruction and crossed-arm geometry",
+      "facial_keypoints_scored": false, "face_evidence": "source-mask-v0", "full_body_evidence": "lower-body-outside-frame"
+    }
+  ]
+}
