@@ -100,6 +100,7 @@ class RepositoryContractTest(unittest.TestCase):
     def test_required_files_exist(self):
         expected = {
             "README.md",
+            "STARTER_ALIGNMENT.md",
             "DATA_GOVERNANCE.md",
             "GUIDE.md",
             "lab-guide.html",
@@ -124,6 +125,7 @@ class RepositoryContractTest(unittest.TestCase):
             "reports/VISIBILITY_REPORT_TEMPLATE.csv",
             "scripts/audit-data-pack.py",
             "scripts/build-notebook.py",
+            "scripts/check-starter-alignment.py",
             "scripts/run-yolo11-diagnostic.py",
             "scripts/validate-submission.py",
             "tests/test_repository_contract.py",
@@ -131,15 +133,43 @@ class RepositoryContractTest(unittest.TestCase):
         missing = sorted(path for path in expected if not (ROOT / path).is_file())
         self.assertEqual(missing, [])
 
-    def test_schedule_is_contiguous_and_240_minutes(self):
+    def test_schedule_mirrors_the_starter_seven_stages(self):
         import re
 
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         ranges = [tuple(map(int, match)) for match in re.findall(r"^\| (\d+)-(\d+) \|", readme, re.M)]
-        self.assertEqual(ranges[0], (0, 15))
-        self.assertEqual(ranges[-1], (237, 240))
+        self.assertEqual(len(ranges), 7)
+        self.assertEqual(ranges[0], (0, 20))
+        self.assertEqual(ranges[-1], (230, 240))
         self.assertEqual(sum(end - start for start, end in ranges), 240)
         self.assertTrue(all(left[1] == right[0] for left, right in zip(ranges, ranges[1:])))
+        # Gold chỉ được phát sau khi nhãn đã khoá; chặng khoá nhãn phải kết thúc trước chặng gold.
+        self.assertEqual(ranges[3][1], ranges[4][0])
+        self.assertEqual(ranges[4][0], 150)
+
+    def test_starter_alignment_contract_is_stated(self):
+        alignment = (ROOT / "STARTER_ALIGNMENT.md").read_text(encoding="utf-8")
+        self.assertIn("Day4-TrackData-Keypoint-Pose", alignment)
+        for divergence in ("D-01", "D-02", "D-03", "D-04", "D-05", "D-06", "D-07", "D-08"):
+            self.assertIn(divergence, alignment)
+        for gate in ("G-01", "G-02", "G-03", "G-04", "G-05", "G-06"):
+            self.assertIn(gate, alignment)
+
+        runbook = (ROOT / "PILOT_TEST_RUNBOOK.md").read_text(encoding="utf-8")
+        run_sheet = (ROOT / "PILOT_RUN_SHEET.md").read_text(encoding="utf-8")
+        for gate in ("G-01", "G-02", "G-03", "G-04", "G-05", "G-06"):
+            self.assertIn(gate, runbook, f"{gate} không có cách chạy trong runbook")
+            self.assertIn(gate, run_sheet, f"{gate} không có chỗ ghi kết quả trong run sheet")
+
+        checker = ROOT / "scripts" / "check-starter-alignment.py"
+        ast.parse(checker.read_text(encoding="utf-8"))
+        result = subprocess.run(
+            [sys.executable, str(checker), "--starter", str(ROOT / "does-not-exist")],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0, "checker phải fail khi không thấy starter")
 
     def test_data_pack_matches_manifest_and_has_no_metadata(self):
         result = subprocess.run(
@@ -225,27 +255,186 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertIn("240 phút", documents)
         self.assertIn("independent attempt", documents)
         self.assertIn("sau self-QC", documents)
-        self.assertIn("pilot-v0.3", documents)
+        self.assertIn("pilot-v0.4", documents)
+        self.assertNotIn("pilot-v0.3", documents)
         self.assertIn("ultralytics==8.4.145", documents)
+
+    def test_lane_boundary_is_stated_where_the_cabin_pack_is_described(self):
+        for name, marker in (
+            ("data/README.md", "Lane C"),
+            ("data/GENERATION_RECORD.md", "Lane C"),
+            ("DATA_GOVERNANCE.md", "Lane separation"),
+            ("REFERENCE_REVIEW_PROTOCOL.md", "$GOLD_RELEASE_DIR"),
+            ("THIRD_PARTY_NOTICES.md", "COCO val2017"),
+        ):
+            document = (ROOT / name).read_text(encoding="utf-8")
+            self.assertIn(marker, document, f"{name} thiếu ranh giới hai lane")
+
+    def test_authority_model_keeps_lab_decisions_with_the_owner(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        alignment = (ROOT / "STARTER_ALIGNMENT.md").read_text(encoding="utf-8")
+        for document, name in ((readme, "README.md"), (alignment, "STARTER_ALIGNMENT.md")):
+            self.assertIn("technical compatibility baseline", document, name)
+        # Starter chỉ là baseline kỹ thuật; timeline/objective/rubric/release thuộc owner pilot.
+        self.assertIn("owner pilot", alignment)
+        for decision in ("Timeline", "Learning objective", "Rubric", "freeze/release"):
+            self.assertIn(decision, alignment, f"{decision} phải có chủ sở hữu rõ ràng")
+        self.assertIn("pilot-v0.4-alpha", readme)
+        self.assertIn("pilot-v0.4-alpha", alignment)
+        self.assertIn("pilot-v0.4-alpha", (ROOT / "PILOT_RUN_SHEET.md").read_text(encoding="utf-8"))
+        for document, name in ((readme, "README.md"), (alignment, "STARTER_ALIGNMENT.md")):
+            self.assertNotIn("source of truth", document.casefold(), name)
+            self.assertNotIn("nguồn chân lý", document, name)
+
+    def repository_text_files(self):
+        skipped = {".git", "outputs", "assets"}
+        suffixes = {".md", ".py", ".html", ".css", ".js", ".json", ".csv", ".txt"}
+        for path in sorted(ROOT.rglob("*")):
+            relative = path.relative_to(ROOT)
+            if not path.is_file() or path.suffix not in suffixes:
+                continue
+            if skipped.intersection(relative.parts):
+                continue
+            yield relative, path.read_text(encoding="utf-8", errors="replace")
+
+    def test_no_role_wording_in_tracked_documents_or_scripts(self):
+        # Đường dẫn theo vai trò bị cấm; dùng ký hiệu trung tính trong STARTER_ALIGNMENT.md mục 1.
+        # Ghép chuỗi để chính file test này không tự vi phạm luật nó đang kiểm.
+        role = "instr" + "uctor"
+        teacher = "giảng " + "viên"
+        forbidden = (role + "/", role + "\\", teacher, teacher.capitalize())
+        offenders = [
+            f"{relative}: {term}"
+            for relative, text in self.repository_text_files()
+            for term in forbidden
+            if term in text
+        ]
+        self.assertEqual(offenders, [])
+
+    def test_starter_commit_pin_is_consistent_and_enforced(self):
+        checker_source = (ROOT / "scripts" / "check-starter-alignment.py").read_text(encoding="utf-8")
+        tree = ast.parse(checker_source)
+        pins = [
+            node.value.value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "PINNED_STARTER_COMMIT"
+                for target in node.targets
+            )
+            and isinstance(node.value, ast.Constant)
+        ]
+        self.assertEqual(len(pins), 1, "checker phải pin đúng một commit")
+        pin = pins[0]
+        self.assertEqual(len(pin), 40)
+        self.assertIn("--allow-unpinned", checker_source, "phải có lối thoát tường minh khỏi pin")
+        for name in (
+            "README.md",
+            "STARTER_ALIGNMENT.md",
+            "PILOT_RUN_SHEET.md",
+            "PILOT_TEST_RUNBOOK.md",
+        ):
+            self.assertIn(pin, (ROOT / name).read_text(encoding="utf-8"), f"{name} pin lệch commit")
+
+    def test_checker_verifies_the_evaluator_and_skeleton_assets(self):
+        checker_source = (ROOT / "scripts" / "check-starter-alignment.py").read_text(encoding="utf-8")
+        for marker in (
+            "evaluate_pose_annotations.py",
+            "labels_day4.json",
+            "skeleton_person_17.svg",
+            "skeleton_hand_21.svg",
+            "skeleton_face_5.svg",
+            "dao_trai_phai",
+            "nham_nguoi",
+            "xoa_khop_bi_che",
+        ):
+            self.assertIn(marker, checker_source, f"G-05 chưa kiểm {marker}")
+
+    def test_lane_s_is_documented_as_two_cvat_tasks(self):
+        spec = (ROOT / "CVAT_TASK_SPEC.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "PILOT_TEST_RUNBOOK.md").read_text(encoding="utf-8")
+        run_sheet = (ROOT / "PILOT_RUN_SHEET.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("task CVAT thứ hai", spec)
+        self.assertIn("annotations/face_hand/", spec)
+        self.assertIn("task CVAT thứ hai", runbook)
+        for document, name in (
+            (spec, "CVAT_TASK_SPEC.md"),
+            (runbook, "PILOT_TEST_RUNBOOK.md"),
+            (run_sheet, "PILOT_RUN_SHEET.md"),
+            (readme, "README.md"),
+        ):
+            folded = document.casefold()
+            self.assertIn("task a", folded, f"{name} thiếu task A")
+            self.assertIn("task b", folded, f"{name} thiếu task B")
+
+    def test_scope_changes_are_owner_decisions_not_runbook_fallbacks(self):
+        runbook = (ROOT / "PILOT_TEST_RUNBOOK.md").read_text(encoding="utf-8")
+        run_sheet = (ROOT / "PILOT_RUN_SHEET.md").read_text(encoding="utf-8")
+        self.assertIn("Decisions pending owner", runbook)
+        self.assertIn("Decisions pending owner", run_sheet)
+        for identifier in ("DP-1", "DP-2", "DP-3", "DP-4"):
+            self.assertIn(identifier, run_sheet)
+        # T-10 chỉ ghi bằng chứng; cắt face/hand hay giảm epoch không được tự kích hoạt.
+        flowed = " ".join(runbook.split())
+        self.assertIn("Runbook **không** có fallback tự động", flowed)
+        self.assertNotIn("Ưu tiên cắt bộ face/hand", flowed)
+        self.assertNotIn("đề xuất giảm epoch cho lớp", flowed)
 
     def test_html_guide_covers_the_active_pack(self):
         guide = (ROOT / "lab-guide.html").read_text(encoding="utf-8")
+        flowed = " ".join(guide.split())
         self.assertIn('lang="vi"', guide)
         self.assertIn('href="#main-content"', guide)
         self.assertIn("COCO-17", guide)
-        self.assertIn("240 PHÚT", guide)
+        # Guide là tài liệu học viên, không còn đóng khung là tài liệu nội bộ.
+        self.assertIn("HƯỚNG DẪN HỌC VIÊN", guide)
+        self.assertNotIn("TÀI LIỆU NỘI BỘ", flowed)
+        # Vẫn phải nói rõ nó thuộc gói cabin, không giả làm route 240 phút của starter.
+        self.assertIn("Lane C", guide)
+        self.assertIn("repo starter", guide)
+        self.assertNotIn("240 phút, một evidence contract", guide)
+        self.assertIn("nằm trong chặng gán nhãn (phút 40–130) của buổi lab 240 phút", flowed)
+        self.assertNotIn("chạy riêng và không nằm trong 240 phút", flowed)
         self.assertIn("PILOT_TEST_RUNBOOK.md", guide)
         self.assertIn("Làm theo ảnh, rồi kiểm ngay trên task.", guide)
         self.assertIn("COCO Keypoints 1.0", guide)
         for image_name in PILOT_IMAGE_NAMES:
             self.assertIn(image_name, guide)
+
+        # On-ramp cho học viên nontech: lệnh sao chép được, link CVAT chung, bảng thuật ngữ.
+        self.assertIn("data-copy=", guide)
+        self.assertIn("http://localhost:8080", guide)
+        self.assertNotIn("localhost:8080/tasks/", guide)
+        self.assertIn('id="glossary"', guide)
+
+        # Phóng to ảnh phải mở lightbox trong trang, không điều hướng ra file ảnh.
+        self.assertIn("data-lightbox", guide)
+        self.assertIn('aria-modal="true"', guide)
+        self.assertIn("data-lightbox-close", guide)
+        self.assertNotIn('target="_blank"', guide)
+
+        cvat_dir = ROOT / "assets" / "guide" / "cvat"
         for screenshot_name in (
-            "01-job-overview.png",
-            "02-select-skeleton.png",
-            "03-export-menu.png",
+            "01-job-overview.jpg",
+            "02-select-skeleton.jpg",
+            "03-export-menu.jpg",
+            "04-toolbar-top.jpg",
+            "05-labels-panel.jpg",
+            "06-draw-skeleton.jpg",
+            "07-export-menu-detail.jpg",
+            "08-menu-save.jpg",
         ):
-            self.assertIn(screenshot_name, guide)
-            self.assertTrue((ROOT / "assets" / "guide" / "cvat" / screenshot_name).is_file())
+            self.assertTrue((cvat_dir / screenshot_name).is_file())
+        # Sáu thao tác phải kèm ảnh CVAT thật, không chỉ chữ.
+        workflow = guide.split('id="workflow"', 1)[1].split("</section>", 1)[0]
+        for screenshot_name in (
+            "08-menu-save.jpg",
+            "05-labels-panel.jpg",
+            "06-draw-skeleton.jpg",
+            "07-export-menu-detail.jpg",
+        ):
+            self.assertIn(screenshot_name, workflow)
 
 
 class CocoKeypointsValidatorTest(unittest.TestCase):

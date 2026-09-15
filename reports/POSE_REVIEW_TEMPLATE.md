@@ -1,4 +1,7 @@
-# Pose review
+# Pose review — Lane C
+
+<!-- Template này dùng cho drill cabin 10 ảnh. Lane S nộp reports/REPORT.md và
+     reports/review_partner.md theo mẫu của repo starter. -->
 
 SELF_QC_COMPLETE: no
 PEER_REVIEW_COMPLETE: no

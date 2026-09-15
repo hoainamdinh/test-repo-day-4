@@ -35,4 +35,5 @@ The passing archive contains exactly `annotations/person_keypoints_default.json`
 - Smoke-test the same SVG/export contract on the authenticated classroom deployment.
 - Run the two-person semantic reference review outside the repository.
 - Expand to 2 guided + 8 independent images and complete the timed 240-minute dry-run.
-- This historical two-image POC does not freeze the current evidence-ladder pack. Re-run the smoke test with all 10 v0.3 images before freezing `pilot-v0.3`.
+- This historical two-image POC does not freeze the current evidence-ladder pack. Re-run the smoke test with all 10 Lane C images before freezing `pilot-v0.4`.
+- It also carries **one skeleton per image**, so it proves nothing about the multi-person case the starter dataset requires (29 people across 20 images). Gate G-02 in `PILOT_TEST_RUNBOOK.md` covers that separately.

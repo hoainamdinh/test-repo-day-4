@@ -1,101 +1,129 @@
-# Day 4 pilot — Cabin pose keypoints
+# Day 4 pilot — Keypoint & Pose
 
-> **Trạng thái:** sẵn sàng kiểm thử. Local CVAT Docker v2.74.1 đã pass task/schema/order smoke trên task #16/job #12; semantic round-trip và timed dry-run vẫn là release gate trước khi freeze.
+> **Trạng thái: `pilot-v0.4-alpha — ready to execute gates`.** Chưa release, chưa freeze.
+> Pilot này **không phải** repo phát cho người học. Repo lớp học là
+> [Day4-TrackData-Keypoint-Pose](https://github.com/VinUni-AI20k/Day4-TrackData-Keypoint-Pose).
+> Việc của pilot là chạy thử trọn route đó và bảo chứng phần privacy/self-hosted chưa được phủ.
 
-Đây là pilot của lab **240 phút** về COCO-17 pose annotation. Active pack gồm 10 người khác nhau theo hai evidence lane và được khóa bằng contract `pilot-v0.3` sau khi hoàn tất kiểm thử.
+Starter là **technical compatibility baseline** — nó định nghĩa schema, định dạng export, cách
+tính OKS và bộ tool. Nó **không** giữ quyền quyết định lab: timeline, learning objective, rubric,
+model và quyết định release đều thuộc owner của pilot. Đọc `STARTER_ALIGNMENT.md` mục 0 trước
+mọi việc khác.
 
-Mở `lab-guide.html` để dùng hướng dẫn trực quan, responsive, checklist preflight tương tác và tutorial CVAT có ảnh chụp thật. `GUIDE.md` là bản chữ tương đương để tra cứu nhanh.
+## Pilot làm gì
 
-## Quyết định dữ liệu
+| | Lane S — starter route | Lane C — cabin compatibility drill |
+| --- | --- | --- |
+| Câu hỏi cần trả lời | người học có đi hết 7 chặng trong 240 phút không | schema/privacy có sống sót trên CVAT self-hosted và ảnh có mask không |
+| Dữ liệu | 20 ảnh train + 10 ảnh test của starter (29 người) | 10 ảnh trong `data/images/` của pilot (10 người) |
+| Task CVAT | **hai task**: A = 20 ảnh/`person`; B = 5 ảnh/`hand`+`face` | một task, chỉ `person` |
+| Chấm | OKS với protected gold release | validator cấu trúc của pilot |
+| Tài liệu | `GUIDE.md` + `RUBRIC.md` của **starter** | `GUIDE.md`, `RUBRIC.md` của pilot |
 
-- **Calibration lane:** 2 crop full-body từ HSRD-100, hai participant khác nhau, informed consent + CC BY 4.0. Mặt đủ rõ để học viên thực sự đặt đủ 17 COCO keypoint.
-- **Cabin lane:** 5 ảnh/5 recording ID từ Driver Risk Behavior Dataset và 3 frame/3 participant ID từ HADRIAN. Đây là 8 ảnh independent về occlusion, field-of-view, ánh sáng và labelability.
-- Không có ảnh AI trong active pack. Validator bắt buộc đúng 10 người, 3 nguồn, split 2 guided + 8 independent và không quá 3 ảnh từ cùng một setup/camera.
-- Ảnh Mendeley được crop vào driver ROI và che mặt; frame HADRIAN giữ face mask của tác giả. Tất cả output được tái tạo từ pixel, không mang EXIF/ICC/XMP/comment, và khóa SHA-256 trong manifest.
-- Pack chỉ dùng trong lane lớp học/phi thương mại do giới hạn CC BY-NC của HADRIAN. “Đã mask” không đồng nghĩa “anonymous”. Năm điểm `nose/eyes/ears` được chấm tọa độ trên 2 ảnh calibration; trên 8 ảnh cabin chúng bắt buộc `Outside` (`v=0`) và không được chấm vị trí.
-- Source behaviour label chỉ nằm trong provenance để truy vết, không phải ground truth của lab; học viên không được kết luận distracted/drowsy từ một still frame.
-- DriPE, DMD và Drive&Act chỉ là benchmark nghiên cứu khi điều khoản không cho phép bundle working copy.
-- Reference annotation được giữ ngoài repo; không có answer key ẩn hoặc nhãn giả trong pilot.
+Không trộn hai lane. Ảnh cabin không vào `dataset/` của starter; nhãn cabin không dùng để
+fine-tune; gold và mapping nguồn của starter không được sao vào pilot.
 
-Xem `DATA_GOVERNANCE.md` trước khi thay bất kỳ ảnh nào.
+## Lane S — chạy đúng route của người học
 
-## Learning objective
+Lịch dưới đây mirror 7 chặng của starter vì pilot đang **kiểm chứng** chính lịch đó. Nếu số đo
+T-10 cho thấy 240 phút không đủ, đổi lịch là quyết định của owner — `STARTER_ALIGNMENT.md` mục 0.
 
-Sau lab, người học có thể:
-
-1. Tạo một skeleton `person` theo đúng thứ tự COCO-17.
-2. Phân biệt `v=0` ngoài khung/không gán, `v=1` bị che nhưng suy ra được và `v=2` nhìn thấy.
-3. Hoàn thành independent attempt trước khi xem model/reference hoặc bài của peer.
-4. Tự kiểm topology, trái/phải, visibility và vị trí giải phẫu.
-5. Viết finding có ảnh–keypoint–rule–fix, rework rồi export COCO Keypoints.
-6. Kiểm cấu trúc artifact mà không nhầm structural PASS với semantic ground truth.
-7. Đưa ra quyết định `usable / usable-with-limitations / needs-review` cho dữ liệu pose và đề xuất `keep / relabel / recollect` bằng evidence.
-
-## Lịch lab 240 phút
-
-| Phút | Hoạt động | Evidence/checkpoint |
+| Phút | Chặng | Evidence/checkpoint |
 | ---: | --- | --- |
-| 0-15 | Mục tiêu, privacy boundary, preflight task/schema | A — đúng task và đúng 17 điểm |
-| 15-35 | Demo COCO-17, trái/phải và `v=0/1/2` | gọi đúng 17 tên và ba visibility state |
-| 35-55 | Error clinic: swap, floating joint, occlusion, out-of-frame | chẩn đoán 4 lỗi mẫu |
-| 55-80 | Guided annotation trên 2 ảnh mẫu | B — skeleton hợp lệ |
-| 80-90 | Nghỉ | — |
-| 90-105 | Đọc pack chính, prediction và annotation plan | chọn thứ tự 8 ảnh independent |
-| 105-155 | Independent annotation, chưa xem model/reference | C — đủ 8 skeleton |
-| 155-175 | Self-QC ba lượt và rework | D — log topology/visibility/anatomy |
-| 175-190 | Export COCO Keypoints và chạy structural audit | E — ZIP + visibility report |
-| 190-200 | Nghỉ | — |
-| 200-210 | Mở model diagnostic hoặc lỗi mẫu để calibration | model chỉ là diagnostic |
-| 210-225 | Peer review có evidence | F — finding hoặc no-defect row hợp lệ |
-| 225-237 | Tác giả xử lý finding, re-export | mọi finding có closure |
-| 237-240 | Kiểm bộ nộp và exit ticket | đủ ba artifact |
+| 0-20 | Dựng 3 skeleton label, tạo **task A** (20 ảnh, `person`) | A — 3 skeleton đúng tên/thứ tự, chế độ Shape |
+| 20-40 | Warm-up 2 ảnh, export thử, soi bằng `visualize_pose.py` | B — export đúng **COCO Keypoints 1.0** |
+| 40-130 | Gán 18 ảnh còn lại của task A + **task B** (5 ảnh, `hand`+`face`) + **khối cabin Lane C** (10 ảnh, ~60 phút) | C — đủ 29 người/17 điểm ở task A; export riêng `annotations/face_hand/`; bộ nộp Lane C |
+| 130-150 | Ba lượt kiểm, visibility report, kiểm chéo, **khoá nhãn** | D — `check_pose_labels.py` 0 lỗi + `visibility_report.md` |
+| 150-190 | Nhận gold, chấm bằng OKS, rework | E — `outputs/eval_vs_gold.json` trước và sau rework |
+| 190-230 | Colab: fine-tune, visualize, đánh giá | F — `outputs/eval_model.json` |
+| 230-240 | Báo cáo, commit, push | đủ 9 deliverable |
 
-Pack 10 ảnh đã đủ cho timed dry-run, nhưng chưa phải production/fairness dataset. Chỉ được tuyên bố lab khả thi sau khi novice và experienced learner hoàn thành cùng contract trong 240 phút.
+Mốc 150 là mốc cứng: gold chỉ được phát sau khi cả lớp đã khoá nhãn.
 
-## Chạy pilot nhanh
+Task B là **task CVAT thứ hai**, không phải thêm label vào task A: topology 21+5 điểm không trộn
+vào bộ 17 điểm, và bộ này không được chấm bằng OKS vì không có gold cho nó.
 
-1. Chạy `python3 scripts/audit-data-pack.py`, rồi tạo task trên CVAT Docker local với đủ 10 ảnh trong `data/images/`.
-2. Import `data/schema/coco17-cvat-skeleton.svg`, xác nhận đủ 17 sublabel đúng thứ tự rồi mới tạo task.
-3. Làm ảnh guided, sau đó ảnh independent theo `GUIDE.md`.
-4. Export **COCO Keypoints 1.0** thành `COCO_KEYPOINTS_EXPORT.zip`.
-5. Chạy:
+### Bộ nộp Lane S (9 mục, theo starter)
 
-```bash
-python3 scripts/validate-submission.py --export COCO_KEYPOINTS_EXPORT.zip --write-report VISIBILITY_REPORT.csv
+```text
+dataset/labels/train/*.txt                                  nhãn YOLO Pose, 56 số/dòng
+annotations/coco_keypoints/person_keypoints_default.json    export COCO Keypoints 1.0
+annotations/face_hand/                                      21 điểm tay + 5 điểm mặt, 5 ảnh
+reports/visibility_report.md + outputs/visibility_report.json
+GUIDELINE_MINI.md
+outputs/eval_vs_gold.json
+outputs/eval_model.json
+reports/REPORT.md
+reports/review_partner.md
 ```
 
-6. Điền `reports/POSE_REVIEW_TEMPLATE.md`, lưu thành `POSE_REVIEW.md`, rồi kiểm đủ bộ:
+### Chạy Lane S
 
 ```bash
+git clone https://github.com/VinUni-AI20k/Day4-TrackData-Keypoint-Pose ../tmp/day4-starter
+git -C ../tmp/day4-starter checkout 79f6724ec1f06cbb5a0dd81425f8a1594fcb8de3
+python3 scripts/check-starter-alignment.py --starter ../tmp/day4-starter
+```
+
+Checker **fail** nếu HEAD của checkout khác commit đã pin `79f6724…`. Muốn khảo sát commit mới
+thì thêm `--allow-unpinned`; nhận commit mới là quyết định của owner, kèm cập nhật pin trong
+script và `STARTER_ALIGNMENT.md`.
+
+Checker phải PASS trước khi chạy pilot. Sau đó làm theo `GUIDE.md` của starter, chặng 1 đến 7,
+và ghi mọi quan sát vào `PILOT_RUN_SHEET.md`.
+
+Bốn lỗi cần đo riêng vì pilot cũ chưa từng chạm tới: **nhầm người** (ảnh 2-3 người),
+**đảo trái/phải**, **xoá khớp bị che**, và **export nhầm COCO 1.0 thay vì COCO Keypoints 1.0**.
+
+## Lane C — cabin compatibility drill
+
+Pack 10 ảnh trong `data/images/` gồm 10 người từ ba nguồn công khai, hai lane bằng chứng:
+2 crop calibration full-body (HSRD-100, CC BY 4.0) và 8 frame cabin (Driver Risk Behavior
+Dataset CC BY 4.0, HADRIAN CC BY-NC 4.0). Không có ảnh AI. Pack chỉ dùng cho lớp học/phi
+thương mại theo ràng buộc nghiêm nhất trong ba nguồn.
+
+Drill này trả lời một câu hỏi mà dataset COCO của starter không trả lời được: khi khuôn mặt
+bị mask, người gán nhãn xử lý 5 điểm mặt thế nào, và schema có chịu được không.
+
+**Điểm lệch có chủ ý (D-01):** trên 8 ảnh cabin, `nose`/`left_eye`/`right_eye`/`left_ear`/
+`right_ear` bắt buộc `Outside` (`v=0`) vì mask đã xoá evidence. Luật của starter ngược lại —
+bị che mà còn trong khung thì `v=1` và vẫn đặt chấm. Vì vậy nhãn cabin **không tương thích**
+với tập train của starter và không bao giờ được trộn vào đó.
+
+```bash
+python3 scripts/audit-data-pack.py
+# tạo task CVAT theo CVAT_TASK_SPEC.md mục "Lane C", annotate theo GUIDE.md
+python3 scripts/validate-submission.py --export COCO_KEYPOINTS_EXPORT.zip --write-report VISIBILITY_REPORT.csv
 python3 scripts/validate-submission.py --submission-dir submission
 ```
 
-Notebook `notebooks/day4-pose-quality.ipynb` cung cấp cùng quy trình cho Colab và không yêu cầu người học viết code.
+Bộ nộp Lane C vẫn là ba file: `COCO_KEYPOINTS_EXPORT.zip`, `VISIBILITY_REPORT.csv`,
+`POSE_REVIEW.md`. Validator chỉ chứng minh cấu trúc, schema, image mapping và consistency của
+visibility count — không chứng minh keypoint đúng giải phẫu.
 
-POC cũ trên task #14/job #10 chỉ chứng minh round-trip schema/export của hai ảnh đã retire. Pack v0.3 đã pass task/schema/order smoke trên task #16/job #12; annotation/save-reload/export semantic round-trip vẫn phải hoàn tất. Annotation POC không phải reference.
+`lab-guide.html` là **hướng dẫn học viên của Lane C** — bản trực quan của khối cabin ~60 phút,
+dùng được cho mọi mức kinh nghiệm: có on-ramp cho học viên nontech (cách mở CVAT, lệnh sao chép
+được, bảng thuật ngữ), preflight checklist, sáu thao tác kèm ảnh chụp CVAT thật và lightbox xem
+ảnh ngay trong trang. `GUIDE.md` của pilot là bản chữ tương đương. Nó chỉ phủ **khối cabin**,
+nằm trong chặng gán nhãn (phút 40-130) của buổi lab 240 phút; learner guide cho phần còn lại của
+route là `GUIDE.md` của starter và lịch 7 chặng ở mục "Lane S" bên trên.
 
-## Bộ nộp
+## Model
 
-ZIP cuối mở ra phải có đúng ba file ở root:
+Owner pilot đã khoá cấu hình pilot là `yolo26n-pose.pt`, đúng với notebook của starter; không
+tự chuyển sang model khác khi checkpoint lỗi. Notebook cài `ultralytics` không pin version, nên
+gate G-04 phải ghi chính xác version cài được trên Colab T4. POC Lane C lịch sử dùng
+`yolo11n-pose.pt` với `ultralytics==8.4.145` trên macOS — xem `MODEL_DIAGNOSTIC_POC.md`; nó
+không thay thế route người học. Learning objective vẫn model-neutral.
 
-```text
-COCO_KEYPOINTS_EXPORT.zip
-VISIBILITY_REPORT.csv
-POSE_REVIEW.md
-```
-
-Validator chỉ chứng minh cấu trúc, schema, image mapping và consistency của visibility count. Nó không chứng minh keypoint nằm đúng giải phẫu; semantic quality phải qua self-QC, peer review và reference riêng tư.
-
-## Model diagnostic
-
-`yolo11n-pose.pt` được giữ làm diagnostic tùy chọn sau self-QC vì không đổi learning objective. Dependency được pin `ultralytics==8.4.145`; weight không nằm trong repo. Phải đọc `THIRD_PARTY_NOTICES.md` và xác nhận license boundary trước khi chạy script.
-
-```bash
-python3 scripts/run-yolo11-diagnostic.py --acknowledge-license-review
-```
-
-Model output không phải ground truth, không tự động ghi đè annotation và không thuộc rubric core.
+Trong Lane C, model chỉ là diagnostic tùy chọn sau self-QC, không phải ground truth, không tự
+ghi đè annotation và không nằm trong rubric core.
 
 ## Release gate
 
-Chỉ freeze `pilot-v0.3` sau khi CVAT Docker semantic round-trip và timed dry-run đều pass. Mọi thay đổi learning objective, schema, order, evidence, privacy boundary hoặc thời lượng 240 phút phải quay lại vòng pilot và kiểm thử tương ứng.
+Sáu gate trong `STARTER_ALIGNMENT.md` mục 6 — G-01 route đầy đủ, G-02 multi-person trên CVAT
+Docker, G-03 đo bộ face/hand, G-04 Colab T4, G-05 lane separation (đã tự động), G-06 timed
+dry-run 240 phút. Chỉ freeze `pilot-v0.4` khi cả sáu pass.
+
+Cách chạy: `PILOT_TEST_RUNBOOK.md`. Ghi kết quả: `PILOT_RUN_SHEET.md`.
+Trước khi đổi bất kỳ ảnh nào: `DATA_GOVERNANCE.md`.

@@ -1,6 +1,31 @@
-# Data governance — Day 4 pose v0.3
+# Data governance — Day 4 pose v0.4
 
-## Active classroom lane
+## Lane separation (bắt buộc)
+
+Pilot có hai tập dữ liệu, thuộc hai chủ sở hữu khác nhau, **không được trộn**:
+
+| | Lane S | Lane C |
+| --- | --- | --- |
+| Dữ liệu | 20 train + 10 test của starter (COCO val2017 subset) | 10 ảnh trong `data/images/` |
+| Chủ sở hữu governance | repo starter | tài liệu này |
+| Reference | `$GOLD_RELEASE_DIR` (protected gold release) | reference riêng tư của pilot |
+
+Ba luật cứng, gate G-05 kiểm tự động (`scripts/check-starter-alignment.py`):
+
+1. Ảnh/nhãn cabin không bao giờ vào `dataset/images|labels` của starter.
+2. Nhãn cabin không bao giờ là input fine-tune — luật `v=0` của Lane C mâu thuẫn với luật
+   occluded-in-frame `v=1` của starter (D-01 trong `STARTER_ALIGNMENT.md`).
+3. `$GOLD_RELEASE_DIR`, `$PROTECTED_SOURCE_DIR` và mọi mapping nguồn của baseline không bao giờ
+   được sao vào repo pilot hay repo learner, kể cả trong lịch sử commit. Hai ký hiệu này định
+   nghĩa ở `STARTER_ALIGNMENT.md` mục 1.
+
+Lane S dùng 30 ảnh COCO val2017 (annotation CC BY 4.0; ảnh là ảnh Flickr do COCO phân phối theo
+điều khoản riêng của COCO), lọc theo tiêu chí "người trong và quanh phương tiện", ngưỡng chiều
+cao bbox 40%. **Không được nói đây là ảnh trong cabin** — nói rõ trong lớp rằng đó là proxy cho
+hai hiện tượng cần dạy: tự che khuất cổ tay/hông, và khớp ra ngoài khung. Chi tiết provenance
+nằm trong `$PROTECTED_SOURCE_DIR` của baseline và không phát ra ngoài.
+
+## Active classroom lane (Lane C)
 
 `data/images/` contains 10 derivatives from 10 distinct participant/recording codes across three public datasets. The pack uses consented human scans and real people, so no asset is described as anonymous. It is restricted to classroom/noncommercial use because the combined pack inherits the stricter CC BY-NC 4.0 boundary.
 
