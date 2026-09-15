@@ -170,8 +170,6 @@ def _normalized_skeleton(value: object) -> set[tuple[int, int]]:
 def audit_coco_keypoints_archive(
     archive_path: Path | str,
     expected_image_names: tuple[str, ...] | list[str] = PILOT_IMAGE_NAMES,
-    *,
-    single_person_per_image: bool = True,
 ) -> dict[str, object]:
     """Audit structural COCO-17 invariants without claiming semantic correctness."""
 
@@ -290,15 +288,9 @@ def audit_coco_keypoints_archive(
         if bbox_values[2] <= 0 or bbox_values[3] <= 0:
             raise ValidationError(f"annotations[{index}].bbox width/height phải dương")
 
-    # Gói cabin có đúng một driver mỗi ảnh; dataset lớp có 1-3 người, nên chỉ bắt "không ảnh trống".
-    if single_person_per_image:
-        wrong_counts = [image_id for image_id, count in annotations_per_image.items() if count != 1]
-        if wrong_counts:
-            raise ValidationError("Pilot cần đúng một person annotation trên mỗi image")
-    else:
-        empty_images = [image_id for image_id, count in annotations_per_image.items() if count < 1]
-        if empty_images:
-            raise ValidationError(f"{len(empty_images)} ảnh không có person annotation nào")
+    wrong_counts = [image_id for image_id, count in annotations_per_image.items() if count != 1]
+    if wrong_counts:
+        raise ValidationError("Pilot cần đúng một person annotation trên mỗi image")
 
     rows = []
     for index, (name, counts) in enumerate(zip(KEYPOINT_NAMES, visibility_counts)):

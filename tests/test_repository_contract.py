@@ -126,27 +126,12 @@ class RepositoryContractTest(unittest.TestCase):
             "scripts/audit-data-pack.py",
             "scripts/build-notebook.py",
             "scripts/check-starter-alignment.py",
-            "scripts/grade-batch.py",
             "scripts/run-yolo11-diagnostic.py",
             "scripts/validate-submission.py",
             "tests/test_repository_contract.py",
         }
         missing = sorted(path for path in expected if not (ROOT / path).is_file())
         self.assertEqual(missing, [])
-
-    def test_batch_grader_reuses_the_starter_toolchain(self):
-        source = (ROOT / "scripts" / "grade-batch.py").read_text(encoding="utf-8")
-        # Chấm phải gọi tool của starter, không được định nghĩa OKS lần thứ hai trong pilot.
-        self.assertIn("tools/evaluate_pose_annotations.py", source)
-        self.assertIn("tools/coco_kp_to_yolo_pose.py", source)
-        self.assertNotIn("def oks", source)
-        # Gold tìm theo hình dạng thư mục, không hardcode đường dẫn có tên vai trò.
-        self.assertIn("rglob(\"gold\")", source)
-        # Kết quả chấm ghi vào outputs/, nơi .gitignore đã chặn.
-        self.assertIn("outputs/grading", source)
-        self.assertIn("outputs/*", (ROOT / ".gitignore").read_text(encoding="utf-8"))
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("scripts/grade-batch.py", readme)
 
     def test_schedule_mirrors_the_starter_seven_stages(self):
         import re

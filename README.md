@@ -75,26 +75,6 @@ và ghi mọi quan sát vào `PILOT_RUN_SHEET.md`.
 Bốn lỗi cần đo riêng vì pilot cũ chưa từng chạm tới: **nhầm người** (ảnh 2-3 người),
 **đảo trái/phải**, **xoá khớp bị che**, và **export nhầm COCO 1.0 thay vì COCO Keypoints 1.0**.
 
-### Chấm cả lớp trong một lệnh
-
-Bài nộp là ZIP export COCO Keypoints 1.0 của CVAT — đúng thứ CVAT xuất ra, người học không phải
-convert tay. Chấm từng bài thì phải giải nén → convert sang YOLO → gọi evaluator, nên có script
-làm trọn chuỗi đó cho cả thư mục bài nộp:
-
-```bash
-python3 scripts/grade-batch.py --submissions ~/baithu --starter ../tmp/day4-starter
-```
-
-Ra `outputs/grading/summary.csv` + `summary.md` (mỗi bài một dòng: pass/fail cấu trúc, mean OKS,
-OKS@0.50/0.75, mức theo thang ba bậc, số người khớp/thiếu/thừa, đếm bốn lỗi trọng tâm) và JSON
-chi tiết từng bài trong `outputs/grading/detail/`. Bài fail cấu trúc xếp lên đầu bảng.
-
-Script **gọi `tools/*.py` của starter tại chỗ**, không fork — OKS và tên lỗi chỉ có một định
-nghĩa. Nó cần `$GOLD_RELEASE_DIR`, nên chỉ chạy được sau khi cả lớp đã khoá nhãn. `outputs/` nằm
-trong `.gitignore`, số liệu chấm không lọt vào git.
-
-Lane C không có gold nên `--lane C` chỉ kiểm được cấu trúc, không ra OKS.
-
 ## Lane C — cabin compatibility drill
 
 Pack 10 ảnh trong `data/images/` gồm 10 người từ ba nguồn công khai, hai lane bằng chứng:
