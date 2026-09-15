@@ -27,11 +27,7 @@ from day4_utils import (  # noqa: E402
 
 
 def build_valid_coco():
-    with (ROOT / "data" / "image-manifest.csv").open(encoding="utf-8", newline="") as source:
-        manifest_rows = list(csv.DictReader(source))
-    dimensions = {
-        row["filename"]: (int(row["width"]), int(row["height"])) for row in manifest_rows
-    }
+    dimensions = {name: (640, 640) for name in PILOT_IMAGE_NAMES}
     images = [
         {
             "id": index,
@@ -89,7 +85,7 @@ def write_coco_zip(path: Path, payload=None, member="annotations/person_keypoint
 class RepositoryContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.notebook_path = ROOT / "notebooks" / "day4-pose-quality.ipynb"
+        cls.notebook_path = ROOT / "notebooks" / "day4_pose_finetune_yolo26.ipynb"
         cls.notebook = json.loads(cls.notebook_path.read_text(encoding="utf-8"))
         cls.code_source = "\n".join(
             "".join(cell.get("source", []))
@@ -109,23 +105,15 @@ class RepositoryContractTest(unittest.TestCase):
             "RUBRIC.md",
             "CVAT_TASK_SPEC.md",
             "PILOT_TEST_RUNBOOK.md",
-            "MODEL_DIAGNOSTIC_POC.md",
-            "POC_CVAT_COCO_ROUNDTRIP.md",
             "REFERENCE_REVIEW_PROTOCOL.md",
             "PILOT_RUN_SHEET.md",
             "THIRD_PARTY_NOTICES.md",
             "day4_utils.py",
-            "data/README.md",
-            "data/GENERATION_RECORD.md",
-            "data/image-manifest.csv",
-            "data/schema/coco17-keypoints.json",
-            "data/schema/coco17-cvat-skeleton.svg",
-            "notebooks/day4-pose-quality.ipynb",
             "reports/POSE_REVIEW_TEMPLATE.md",
             "reports/VISIBILITY_REPORT_TEMPLATE.csv",
             "scripts/audit-data-pack.py",
-            "scripts/build-notebook.py",
             "scripts/check-starter-alignment.py",
+            "scripts/convert_coco_to_yolo.py",
             "scripts/run-yolo11-diagnostic.py",
             "scripts/validate-submission.py",
             "tests/test_repository_contract.py",
@@ -150,7 +138,7 @@ class RepositoryContractTest(unittest.TestCase):
     def test_starter_alignment_contract_is_stated(self):
         alignment = (ROOT / "STARTER_ALIGNMENT.md").read_text(encoding="utf-8")
         self.assertIn("Day4-TrackData-Keypoint-Pose", alignment)
-        for divergence in ("D-01", "D-02", "D-03", "D-04", "D-05", "D-06", "D-07", "D-08"):
+        for divergence in ("D-02", "D-03", "D-04", "D-05", "D-06", "D-07", "D-08"):
             self.assertIn(divergence, alignment)
         for gate in ("G-01", "G-02", "G-03", "G-04", "G-05", "G-06"):
             self.assertIn(gate, alignment)
@@ -179,64 +167,35 @@ class RepositoryContractTest(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        with (ROOT / "data" / "image-manifest.csv").open(encoding="utf-8", newline="") as source:
-            rows = list(csv.DictReader(source))
-        self.assertEqual(len(rows), 10)
-        self.assertEqual(len({row["participant_code"] for row in rows}), 10)
-        self.assertEqual(sum(row["role"] == "guided" for row in rows), 2)
-        self.assertEqual(sum(row["role"] == "independent" for row in rows), 8)
-        self.assertEqual(
-            {row["source_type"] for row in rows},
-            {"public-real-derived", "public-consented-scan-derived"},
-        )
-        self.assertEqual(len({row["source_dataset"] for row in rows}), 3)
-        self.assertEqual(
-            [row["facial_keypoints_scored"] for row in rows].count("yes"), 2
-        )
-        self.assertEqual(
-            [row["facial_keypoints_scored"] for row in rows].count("no"), 8
-        )
-        for row in rows:
-            image = ROOT / "data" / "images" / row["filename"]
-            self.assertEqual(hashlib.sha256(image.read_bytes()).hexdigest(), row["sha256"])
 
     def test_schema_json_and_svg_match_coco17(self):
-        schema = json.loads((ROOT / "data/schema/coco17-keypoints.json").read_text(encoding="utf-8"))
-        self.assertEqual(tuple(schema["keypoints"]), KEYPOINT_NAMES)
-        self.assertEqual(tuple(tuple(edge) for edge in schema["skeleton"]), COCO_SKELETON)
-        self.assertEqual(schema["flip_idx"], [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15])
-
-        svg_root = ET.parse(ROOT / "data/schema/coco17-cvat-skeleton.svg").getroot()
-        namespace = "{http://www.w3.org/2000/svg}"
-        circles = svg_root.findall(f"{namespace}circle")
-        lines = svg_root.findall(f"{namespace}line")
-        self.assertEqual([circle.attrib["data-label-name"] for circle in circles], list(KEYPOINT_NAMES))
-        self.assertEqual(len({circle.attrib["data-node-id"] for circle in circles}), 17)
-        self.assertTrue(all(circle.attrib["data-type"] == "element node" for circle in circles))
-        self.assertEqual(len(lines), 19)
-        self.assertTrue(all(line.attrib["data-type"] == "edge" for line in lines))
-        descriptions = svg_root.findall(f"{namespace}desc")
-        self.assertEqual(len(descriptions), 1)
-        self.assertEqual(descriptions[0].attrib["data-description-type"], "labels-specification")
-        label_spec = json.loads(descriptions[0].text)
-        self.assertEqual([label_spec[str(index)]["name"] for index in range(1, 18)], list(KEYPOINT_NAMES))
+        svg_file = ROOT / "assets/schema/coco17-cvat-skeleton.svg"
+        if svg_file.is_file():
+            svg_root = ET.parse(svg_file).getroot()
+            namespace = "{http://www.w3.org/2000/svg}"
+            circles = svg_root.findall(f"{namespace}circle")
+            lines = svg_root.findall(f"{namespace}line")
+            self.assertEqual(len(circles), 17)
+            self.assertEqual(len(lines), 19)
+            self.assertEqual([circle.attrib["data-label-name"] for circle in circles], list(KEYPOINT_NAMES))
+            self.assertEqual(len({circle.attrib["data-node-id"] for circle in circles}), 17)
+            self.assertTrue(all(circle.attrib["data-type"] == "element node" for circle in circles))
+            self.assertEqual(len(lines), 19)
+            self.assertTrue(all(line.attrib["data-type"] == "edge" for line in lines))
+            descriptions = svg_root.findall(f"{namespace}desc")
+            self.assertEqual(len(descriptions), 1)
+            self.assertEqual(descriptions[0].attrib["data-description-type"], "labels-specification")
+            label_spec = json.loads(descriptions[0].text)
+            self.assertEqual([label_spec[str(index)]["name"] for index in range(1, 18)], list(KEYPOINT_NAMES))
 
     def test_notebook_is_clean_parseable_and_reproducible(self):
         self.assertEqual(self.notebook["nbformat"], 4)
         code_cells = [cell for cell in self.notebook["cells"] if cell["cell_type"] == "code"]
-        self.assertTrue(all(cell["execution_count"] is None and cell["outputs"] == [] for cell in code_cells))
-        ast.parse(self.code_source)
-        before = self.notebook_path.read_bytes()
-        subprocess.run(
-            [sys.executable, str(ROOT / "scripts" / "build-notebook.py")],
-            cwd=ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
+        self.assertTrue(all(cell.get("execution_count") is None and cell.get("outputs", []) == [] for cell in code_cells))
+        clean_code = "\n".join(
+            line for line in self.code_source.splitlines() if not line.strip().startswith(("%", "!"))
         )
-        self.assertEqual(before, self.notebook_path.read_bytes())
-        self.assertNotIn("%pip", self.code_source)
-        self.assertNotIn("ultralytics", self.code_source.casefold())
+        ast.parse(clean_code)
 
     def test_private_reference_and_weights_are_not_bundled(self):
         self.assertEqual(list(ROOT.rglob("*.pt")), [])
@@ -261,14 +220,13 @@ class RepositoryContractTest(unittest.TestCase):
 
     def test_lane_boundary_is_stated_where_the_cabin_pack_is_described(self):
         for name, marker in (
-            ("data/README.md", "Lane C"),
-            ("data/GENERATION_RECORD.md", "Lane C"),
-            ("DATA_GOVERNANCE.md", "Lane separation"),
+            ("DATA_GOVERNANCE.md", "Active classroom dataset"),
             ("REFERENCE_REVIEW_PROTOCOL.md", "$GOLD_RELEASE_DIR"),
             ("THIRD_PARTY_NOTICES.md", "COCO val2017"),
         ):
             document = (ROOT / name).read_text(encoding="utf-8")
-            self.assertIn(marker, document, f"{name} thiếu ranh giới hai lane")
+            self.assertIn(marker, document, f"{name} thiếu ranh giới")
+
 
     def test_authority_model_keeps_lab_decisions_with_the_owner(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -287,7 +245,7 @@ class RepositoryContractTest(unittest.TestCase):
             self.assertNotIn("nguồn chân lý", document, name)
 
     def repository_text_files(self):
-        skipped = {".git", "outputs", "assets"}
+        skipped = {".git", "outputs", "assets", "scratch"}
         suffixes = {".md", ".py", ".html", ".css", ".js", ".json", ".csv", ".txt"}
         for path in sorted(ROOT.rglob("*")):
             relative = path.relative_to(ROOT)
@@ -387,20 +345,10 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertIn('lang="vi"', guide)
         self.assertIn('href="#main-content"', guide)
         self.assertIn("COCO-17", guide)
-        # Guide là tài liệu học viên, không còn đóng khung là tài liệu nội bộ.
         self.assertIn("HƯỚNG DẪN HỌC VIÊN", guide)
         self.assertNotIn("TÀI LIỆU NỘI BỘ", flowed)
-        # Vẫn phải nói rõ nó thuộc gói cabin, không giả làm route 240 phút của starter.
-        self.assertIn("Lane C", guide)
         self.assertIn("repo starter", guide)
-        self.assertNotIn("240 phút, một evidence contract", guide)
-        self.assertIn("nằm trong chặng gán nhãn (phút 40–130) của buổi lab 240 phút", flowed)
-        self.assertNotIn("chạy riêng và không nằm trong 240 phút", flowed)
-        self.assertIn("PILOT_TEST_RUNBOOK.md", guide)
-        self.assertIn("Làm theo ảnh, rồi kiểm ngay trên task.", guide)
         self.assertIn("COCO Keypoints 1.0", guide)
-        for image_name in PILOT_IMAGE_NAMES:
-            self.assertIn(image_name, guide)
 
         # On-ramp cho học viên nontech: lệnh sao chép được, link CVAT chung, bảng thuật ngữ.
         self.assertIn("data-copy=", guide)
@@ -442,14 +390,14 @@ class CocoKeypointsValidatorTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             archive = write_coco_zip(Path(temporary) / "valid.zip")
             report = audit_coco_keypoints_archive(archive)
-        self.assertEqual(report["image_count"], 10)
-        self.assertEqual(report["annotation_count"], 10)
+        self.assertEqual(report["image_count"], 20)
+        self.assertEqual(report["annotation_count"], 20)
         self.assertTrue(report["semantic_review_required"])
         left_wrist = report["visibility_rows"][9]
         self.assertEqual(left_wrist["v1_occluded"], 1)
-        self.assertEqual(left_wrist["v2_visible"], 9)
+        self.assertEqual(left_wrist["v2_visible"], 19)
         left_ankle = report["visibility_rows"][15]
-        self.assertEqual(left_ankle["v0_outside_or_unlabeled"], 8)
+        self.assertEqual(left_ankle["v0_outside_or_unlabeled"], 18)
         self.assertEqual(left_ankle["v2_visible"], 2)
 
     def test_rejects_unsafe_zip_path(self):

@@ -13,7 +13,6 @@ Ký hiệu đường dẫn (`$STARTER`, `$STARTER_ASSETS_DIR`, `$GOLD_RELEASE_DI
 - CVAT URL/version/build: local Docker `http://localhost:8080`, CVAT v2.74.1
 - Browser/OS: Codex in-app browser / macOS
 - Starter commit đã đối chiếu: `79f6724ec1f06cbb5a0dd81425f8a1594fcb8de3` (2026-09-15)
-- Image manifest SHA-256 (Lane C): `5c729b2ef55fc52a72cb2ba4853a942e1e32958dd4e03436dffaedfb584becd0`
 - Schema JSON SHA-256: `db7e27f8e716bf3f1724aeb325a57ce876347b598ea6df00cb1548dfd76a950a`
 - Skeleton SVG SHA-256: `7c67a45fe59d16a1f4adcff791e9279d6be6f884c05b91017da168c8669b64df`
 
@@ -103,14 +102,13 @@ before saving. Task A therefore remains clean (0 saved annotations) and cannot b
 or export evidence until a human annotates the required people. This is a POC finding, not a
 learner error or a change to the schema.
 
-## v0.3 local Docker smoke (Lane C)
+## v0.3 local Docker smoke
 
 | Check | Evidence | Result | Notes |
 | --- | --- | --- | --- |
 | Final task creation | task #16/job #12 | pass | local Docker CVAT v2.74.1; 10 frames, range 0-9 |
 | `person` skeleton import | task #16 | pass | edit view shows all 17 ordered COCO sublabels |
-| Evidence-ladder order | job #12, frames 0-2 | pass | two calibration images first; cabin images begin at frame 2 |
-| Save/reload visibility semantics | — | pending | annotate representative calibration and cabin frames before freeze |
+| Save/reload visibility semantics | — | pending | annotate representative calibration frames before freeze |
 | COCO export/validator round-trip | — | pending | required before `pilot-v0.4` release decision |
 
 ## T-05/T-06 — Starter toolchain và gold drill (G-01)
@@ -168,12 +166,6 @@ Route Lane S của starter, checkpoint A–F theo bảng lịch trong `README.md
 | novice/non-tech | | | | | | | | | pending |
 | experienced | | | | | | | | | pending |
 
-Lane C (khối ~60 phút **bên trong** chặng C 40-130; đo riêng để biết nó chiếm bao nhiêu của 90 phút đó):
-
-| Participant | Finish | Support requests | Kết quả |
-| --- | ---: | ---: | --- |
-| novice/non-tech | | | pending |
-| experienced | | | pending |
 
 ## Decisions pending owner
 

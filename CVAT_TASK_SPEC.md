@@ -1,9 +1,6 @@
-# CVAT task spec — pilot v0.4
+# CVAT task spec — Day 4 Lane S
 
-Hai lane, **ba task**, không lane nào dùng chung task với lane kia. Lane S dựng lại đúng cấu
-trúc người học sẽ dựng — một project với **task A** (20 ảnh, `person`) và **task B** (5 ảnh,
-`hand`+`face`). Lane C là drill privacy của pilot, một task độc lập. Xem `STARTER_ALIGNMENT.md`
-mục 2.
+Lane S bao gồm **hai task**: **task A** (20 ảnh, `person`) và **task B** (5 ảnh, `hand`+`face`). Xem `STARTER_ALIGNMENT.md` mục 2.
 
 ## Environment (chung)
 
@@ -86,28 +83,7 @@ Expected archive contract — task A:
 Hai lỗi cần đo vì evaluator của baseline phạt nặng: `nham_nguoi` (khớp của người A gán cho
 người B) và `dao_trai_phai`.
 
----
 
-## Lane C — task cabin privacy drill
-
-- Task name đề xuất: `DAY04-POSE-PILOT-V04`.
-- Images: đủ 10 file JPEG trong `data/images/`, đúng byte/hash và thứ tự manifest.
-- Label: chỉ `person` (skeleton, 17 sublabel theo `data/schema/coco17-keypoints.json`, 19 cạnh).
-- **Không** thêm `hand`/`face`, action attribute hay class khác — Lane C không đo bộ face/hand.
-- Một annotation `person` trên mỗi ảnh (driver ROI).
-
-Trong Skeleton Configurator, upload `data/schema/coco17-cvat-skeleton.svg`. Ở Raw/Constructor,
-xác nhận từng `data-label-name`; nếu CVAT version không nhận SVG, tạo thủ công từ JSON rồi
-download lại SVG thực tế và ghi chênh lệch.
-
-### Expected archive contract — Lane C
-
-- Đúng một `person_keypoints_*.json` hoặc một COCO annotation JSON trong ZIP.
-- Mười image record có basename khớp manifest.
-- Một annotation `person` trên mỗi image.
-- Mỗi `keypoints` có 51 số; `num_keypoints == count(v > 0)`.
-- Category có đúng 17 keypoint và 19 skeleton edge.
-- Hai image record calibration phải có đủ 17 point được gán; tám image cabin phải giữ năm facial node ở `v=0` (D-01).
 
 ---
 

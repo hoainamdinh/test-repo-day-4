@@ -36,8 +36,8 @@ def main() -> int:
         return 2
 
     args.output.mkdir(parents=True, exist_ok=True)
-    model = YOLO(args.model)
-    for image_path in sorted((ROOT / "data" / "images").glob("*.png")):
+    img_dir = ROOT / "dataset" / "images" / "train"
+    for image_path in sorted(img_dir.glob("*.jpg")):
         model.predict(
             source=str(image_path),
             save=True,

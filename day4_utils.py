@@ -40,18 +40,7 @@ COCO_SKELETON = (
     (2, 4), (3, 5), (4, 6), (5, 7),
 )
 
-PILOT_IMAGE_NAMES = (
-    "d04-01-calibration-full-coco17-frontal.jpg",
-    "d04-02-calibration-raised-arm-coco17.jpg",
-    "d04-03-cabin-real-vehicle-baseline.jpg",
-    "d04-04-cabin-real-vehicle-object-interaction.jpg",
-    "d04-05-cabin-real-vehicle-cool-cast.jpg",
-    "d04-06-cabin-real-vehicle-forward-lean.jpg",
-    "d04-07-cabin-real-vehicle-handheld-object.jpg",
-    "d04-08-cabin-simulator-low-light.jpg",
-    "d04-09-cabin-simulator-glare.jpg",
-    "d04-10-cabin-simulator-obstruction.jpg",
-)
+PILOT_IMAGE_NAMES = tuple(f"train_{i:02d}.jpg" for i in range(1, 21))
 
 EXPECTED_SUBMISSION_FILES = {
     "COCO_KEYPOINTS_EXPORT.zip",

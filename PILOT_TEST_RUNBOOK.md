@@ -12,14 +12,12 @@ tự đổi cấu hình model: những quyết định đó thuộc owner pilot 
 | T-ID | Gate | Chặn freeze |
 | --- | --- | --- |
 | T-01 Repository contract | — | có |
-| T-02 Lane separation | G-05 | có |
-| T-03 Data pack (Lane C) | — | có |
+| T-02 Alignment contract | G-05 | có |
 | T-04 CVAT round-trip multi-person | G-02 | có |
 | T-05 Starter toolchain round-trip | G-01 | có |
 | T-06 Gold release drill | G-01 | có |
 | T-07 Colab T4 | G-04 | có |
 | T-08 Bộ face/hand | G-03 | có |
-| T-09 Semantic reference (Lane C) | — | có |
 | T-10 Timed 240-minute dry-run | G-06 | có |
 | T-11 Freeze | — | — |
 
@@ -53,19 +51,11 @@ Khảo sát một commit mới hơn thì chạy thêm `--allow-unpinned`. Kết 
 pin: nhận commit mới là quyết định của owner, kèm sửa `PINNED_STARTER_COMMIT` trong script,
 `STARTER_ALIGNMENT.md` và `PILOT_RUN_SHEET.md`.
 
-## T-03 — Data pack (Lane C)
 
-```bash
-python3 scripts/audit-data-pack.py
-```
-
-Expected: 10 JPEG đúng dimensions/hash, 10 participant code duy nhất, 3 nguồn, split 2
-full-COCO17 guided + 8 cabin independent, không quá 3 ảnh/setup, không EXIF/ICC/XMP/comment và
-toàn pack khóa `classroom-noncommercial`.
 
 ## T-04 — CVAT round-trip multi-person (G-02)
 
-POC schema/export cũ: **pass** trên local Docker ngày 2026-09-14; xem `POC_CVAT_COCO_ROUNDTRIP.md`.
+POC schema/export cũ: **pass** trên local Docker ngày 2026-09-14.
 POC đó chỉ có một skeleton/ảnh, nên **không** phủ được phần dưới đây.
 
 Cấu trúc bắt buộc: **một project, hai task** — task A (20 ảnh, `person`) và task B (5 ảnh,
@@ -169,20 +159,9 @@ Kết quả đi vào `PILOT_RUN_SHEET.md` dưới dạng số. Cấu hình đã 
 phút của chặng 3; T-08 chỉ cho biết cấu hình đó có hoàn thành được hay không. Không tự cắt bộ
 face/hand — D-06, `STARTER_ALIGNMENT.md` mục 0.
 
-## T-09 — Semantic reference (Lane C)
-
-Hai reviewer annotate độc lập theo `REFERENCE_REVIEW_PROTOCOL.md`. Reconcile nhưng giữ reference
-ngoài repo. Kiểm full-17 calibration trên HSRD; kiểm left/right, face-mask boundary, wrist
-occlusion và lower-body Outside trên cả hai nguồn cabin; thay ảnh nếu mask che mất vai/khuỷu hoặc
-scenario không tạo giá trị học tập.
-
-Model diagnostic chỉ chạy **sau** khi bản human attempt đã khóa. Ghi Python, Ultralytics version,
-model checksum/source và output location. Nếu license/runtime không phù hợp, đánh dấu `not-run`;
-core vẫn pass.
-
 ## T-10 — Timed 240-minute dry-run (G-06, blocking)
 
-Chạy **đúng route Lane S của starter**, 7 chặng, không phải pack cabin:
+Chạy **đúng route Lane S của starter**, 7 chặng:
 
 - một learner mới/non-tech;
 - một learner có kinh nghiệm;
@@ -197,23 +176,9 @@ fallback tự động: task B vẫn core, train vẫn 80 epoch và tổng thời
 đổi scope nào sau pilot phải được owner ghi thành một quyết định mới rồi chạy lại T-10; số đo cũ
 không còn giá trị cho cấu hình mới.
 
-Lane C là khối ~60 phút **bên trong** chặng gán nhãn 40-130, không phải buổi thêm: nó dùng chung
-ngân sách 90 phút với 18 ảnh còn lại của task A và task B. Bấm giờ riêng cho khối này để biết nó
-chiếm bao nhiêu; nếu tổng chặng vượt 90 phút thì ghi vào finding của G-06, không tự cắt scope.
-
 ## T-11 — Freeze
 
-Trạng thái hiện tại là `pilot-v0.4-alpha — ready to execute gates`. Freeze là **quyết định của
-owner**, chỉ được đặt lên bàn sau khi T-01 đến T-10 pass **và** mọi mục trong
-"Decisions pending owner" đã được chốt. Khi freeze, gắn `pilot-v0.4` và khóa:
+Trạng thái hiện tại là `pilot-v0.4-alpha — ready to execute gates`. Chỉ freeze khi các chặng independent attempt và đánh giá sau self-QC hoàn tất. Freeze là **quyết định của owner**, chỉ được đặt lên bàn sau khi T-01 đến T-10 pass và version `ultralytics==8.4.145` được xác nhận.
 
-- immutable image manifest/hashes của Lane C;
-- schema JSON/SVG;
-- notebook/validator tests;
-- learner flow, rubric readiness và three-file submission contract của Lane C;
-- attribution/license notice, privacy transformations và danh sách private assets **không** được đưa vào repo;
-- commit SHA đã pin (`79f6724ec1f06cbb5a0dd81425f8a1594fcb8de3`) — alignment chỉ đúng với commit đó.
+Mọi thay đổi learning objective, schema, order, evidence, privacy boundary hoặc 240 phút đều phải quay lại vòng pilot và kiểm thử tương ứng. Baseline đổi dataset hay tool thì chạy lại T-02 trước tiên.
 
-Mọi thay đổi learning objective, schema, order, evidence, privacy boundary hoặc 240 phút đều
-phải quay lại vòng pilot và kiểm thử tương ứng. Baseline đổi dataset hay tool thì chạy lại T-02
-trước tiên.

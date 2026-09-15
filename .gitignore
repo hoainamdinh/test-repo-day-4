@@ -2,8 +2,6 @@ __pycache__/
 *.py[cod]
 *.pt
 runs/
-outputs/*
-!outputs/.gitkeep
 submission/
 *.zip
 .DS_Store
