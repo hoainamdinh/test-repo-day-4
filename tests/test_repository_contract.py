@@ -116,6 +116,7 @@ class RepositoryContractTest(unittest.TestCase):
             "scripts/convert_coco_to_yolo.py",
             "scripts/run-yolo11-diagnostic.py",
             "scripts/validate-submission.py",
+            "tools/check_pose_labels.py",
             "tests/test_repository_contract.py",
         }
         missing = sorted(path for path in expected if not (ROOT / path).is_file())
