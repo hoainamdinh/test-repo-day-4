@@ -137,6 +137,16 @@ Expected: đo được OKS trước/sau rework; ngưỡng baseline là mean ≥ 
 Đối chiếu: `make_mock_student.py --quality average` cho mean OKS `0.6921`, OKS@0.75 `0.5172`,
 29/29 người khớp — dùng làm baseline khi nghi ngờ pipeline chấm sai.
 
+Chấm nhiều bài thì dùng script gom cả chuỗi (giải nén → convert → evaluator → một bảng):
+
+```bash
+python3 scripts/grade-batch.py --submissions <thư mục chứa các .zip> --starter ../tmp/day4-starter
+```
+
+Expected: `outputs/grading/summary.md` có đủ số dòng bằng số ZIP; bài hỏng định dạng hiện `FAIL`
+kèm lý do thay vì làm dừng cả lượt chấm. Đo luôn thời gian chạy cho cả lớp và ghi vào run sheet —
+nếu chấm vẫn là nút cổ chai thì đó là finding, không phải lý do đổi định dạng nộp.
+
 ## T-07 — Colab T4 (G-04)
 
 Mở `$STARTER/notebooks/day4_pose_finetune_yolo26.ipynb` trên Colab, runtime **T4**:
